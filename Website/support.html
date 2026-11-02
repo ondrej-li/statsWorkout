@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support — StatsWorkout</title>
+<meta name="description" content="How to connect StatsWorkout to Apple Health, read the charts, change units and fix empty charts.">
+<meta name="theme-color" content="#070d16">
+<link rel="canonical" href="https://stats-workout.ondralinek.cz/support.html">
+<link rel="alternate" hreflang="en" href="https://stats-workout.ondralinek.cz/support.html">
+<link rel="alternate" hreflang="cs" href="https://stats-workout.ondralinek.cz/cs/support.html">
+<link rel="alternate" hreflang="x-default" href="https://stats-workout.ondralinek.cz/support.html">
+<link rel="icon" href="/assets/icon-300.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/icon-300.png">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body class="doc">
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <img src="/assets/icon-300.png" alt="" width="34" height="34">
+      <span>StatsWorkout</span>
+    </a>
+    <nav>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/support.html" class="on">Support</a>
+      <a class="lang" href="/cs/support.html" hreflang="cs" lang="cs">Čeština</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap narrow">
+  <h1>Support</h1>
+  <p class="updated">StatsWorkout 0.1 · iOS 26 or later · iPhone and iPad</p>
+
+  <p>StatsWorkout turns the activity in your Apple Health into week, month, quarter and year statistics. Everything is calculated on your device; nothing is uploaded.</p>
+
+  <h2>Connect Apple Health</h2>
+  <p>On first launch the app asks for read access to Apple Health. Choose <strong>Select All</strong> — or at least <strong>Steps</strong> and <strong>Workouts</strong> — and allow. Without that permission the charts stay empty.</p>
+  <p>If you dismissed the sheet, you can ask again any time:</p>
+  <ul>
+    <li>In StatsWorkout: <strong>Settings → Apple Health → Request read access</strong>.</li>
+    <li>In iOS: <strong>Settings → Privacy &amp; Security → Health → StatsWorkout</strong>.</li>
+  </ul>
+
+  <div class="note">
+    <p>Apple deliberately never tells apps whether read access was granted. If the dashboard is empty, it is either "no data in this period" or "access not granted" — the Health app shows the truth under <strong>Sharing → Apps → StatsWorkout</strong>.</p>
+  </div>
+
+  <h2>What the numbers mean</h2>
+  <div class="table">
+    <table>
+      <thead><tr><th>Metric</th><th>Source in Apple Health</th></tr></thead>
+      <tbody>
+        <tr><td>Steps</td><td>All-day step count for the period, not just workouts</td></tr>
+        <tr><td>Distance</td><td>Distance recorded by workouts: walking and running, cycling, swimming</td></tr>
+        <tr><td>Elevation</td><td>Elevation ascended in workouts, when the recording app provides it</td></tr>
+        <tr><td>Exercise</td><td>Total duration of workouts</td></tr>
+        <tr><td>Activities</td><td>Number of workouts</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Counted workout types are running, walking, cycling, hiking, swimming, strength training, yoga and everything else as a general workout. Distance and elevation only come from workouts — a walk to the shop adds steps, not kilometres.</p>
+
+  <h2>Periods and comparisons</h2>
+  <p>Choose <strong>24h</strong> (rolling window ending with the current hour), <strong>Day</strong>, <strong>Week</strong>, <strong>Month</strong>, <strong>Quarter</strong>, <strong>Year</strong> or <strong>Custom</strong>. Use the arrows next to the title to move one period back or forward, and <strong>Today</strong> to return.</p>
+  <p>Totals are compared with the previous period, or with the same period last year (change it in Settings). A period that is still running is compared only with the same elapsed part of the previous one, so the first days of a month are not compared with a whole month.</p>
+
+  <h2>Working with the charts</h2>
+  <ul>
+    <li><strong>Pinch</strong> the chart, or use the +/− buttons, to zoom into a shorter stretch.</li>
+    <li><strong>Drag</strong> sideways to pan while zoomed; the circular arrow resets the zoom.</li>
+    <li><strong>Tap or drag</strong> across a bar or the progress line to read the exact value for that hour, day, week or month.</li>
+  </ul>
+
+  <h2>Units</h2>
+  <p>Settings → <strong>Units</strong> lets you switch distance between kilometres and miles, and elevation between metres and feet. Every tile, total and chart axis follows immediately.</p>
+
+  <h2>Demo data</h2>
+  <p>Settings → <strong>Data source → Use demo data</strong> fills the dashboard with generated sample activity. It is meant for trying the app without Health data; switch it off to see your real Apple Health numbers.</p>
+
+  <h2>Charts are still empty</h2>
+  <ul>
+    <li>Open the Health app and check that workouts and steps of that period really exist.</li>
+    <li>Check that access for <em>both</em> Steps and Workouts is on — permissions are per data type.</li>
+    <li>Try a wider period (Year) to rule out an empty range.</li>
+    <li>Turn off demo data if it is on, so the app reads Apple Health.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>Still stuck, or something looks wrong? Write to <a href="mailto:ondrej.linek@gmail.com">ondrej.linek@gmail.com</a> and include your device model, iOS version and what you expected to see.</p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Ondřej Linek</span>
+    <span><a href="/privacy.html">Privacy</a> · <a href="/support.html">Support</a> · <a href="mailto:ondrej.linek@gmail.com">ondrej.linek@gmail.com</a></span>
+  </div>
+</footer>
+</body>
+</html>
