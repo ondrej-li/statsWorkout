@@ -293,9 +293,11 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					1BBE43010B555E7F4379452F = {
+						DevelopmentTeam = B592D69P29;
 						ProvisioningStyle = Automatic;
 					};
 					9788FC781D8549B4F6B8A69F = {
+						DevelopmentTeam = B592D69P29;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -445,6 +447,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = B592D69P29;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -517,6 +520,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = B592D69P29;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;

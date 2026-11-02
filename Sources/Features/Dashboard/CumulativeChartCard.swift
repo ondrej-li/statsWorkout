@@ -207,6 +207,7 @@ struct CumulativeChartCard: View {
     }
 }
 
+#if DEBUG
 #Preview("Cumulative chart") {
     let stats = PreviewStats.sample()
     CumulativeChartCard(
@@ -219,3 +220,5 @@ struct CumulativeChartCard: View {
     .padding()
     .background(Theme.screenBackground)
 }
+
+#endif

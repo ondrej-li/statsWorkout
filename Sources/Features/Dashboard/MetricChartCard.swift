@@ -270,6 +270,7 @@ struct MetricChartCard: View {
     }
 }
 
+#if DEBUG
 #Preview("Metric chart") {
     let stats = PreviewStats.sample()
     MetricChartCard(
@@ -282,3 +283,5 @@ struct MetricChartCard: View {
     .padding()
     .background(Theme.screenBackground)
 }
+
+#endif

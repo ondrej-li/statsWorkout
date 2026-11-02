@@ -32,6 +32,7 @@ struct PeriodPickerBar: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack {
         PeriodPickerBar(selection: .month) { _ in }
@@ -39,3 +40,5 @@ struct PeriodPickerBar: View {
     }
     .padding()
 }
+
+#endif

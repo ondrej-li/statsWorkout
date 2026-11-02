@@ -52,6 +52,7 @@ struct MetricTileView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     HStack(spacing: 10) {
         MetricTileView(metric: .steps, value: "128k", delta: 0.12, isSelected: true) {}
@@ -60,3 +61,5 @@ struct MetricTileView: View {
     .padding()
     .background(Theme.screenBackground)
 }
+
+#endif

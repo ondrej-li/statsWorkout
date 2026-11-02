@@ -33,6 +33,7 @@ final class AppEnvironment {
         )
     }
 
+#if DEBUG
     static func preview() -> AppEnvironment {
         AppEnvironment(
             settings: AppSettings(persists: false),
@@ -40,6 +41,7 @@ final class AppEnvironment {
             mock: MockHealthDataSource()
         )
     }
+#endif
 
     var dataSource: any HealthDataProviding {
         settings.useMockData ? mock : healthKit
