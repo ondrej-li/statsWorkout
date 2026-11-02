@@ -137,3 +137,17 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 - Workout detail screens with route maps
 - Background HealthKit delivery and incremental caching
 - Localisation (string catalog is already enabled)
+
+## Publishing to TestFlight
+
+```bash
+make testflight            # build number defaults to a timestamp
+make testflight 42         # or pass an explicit build number
+```
+
+The script archives in Release, signs with automatic provisioning for team
+`B592D69P29` and uploads to App Store Connect. Prerequisites:
+
+- Xcode is signed in with the team's Apple ID (*Xcode → Settings → Accounts*).
+- An app record for `com.defik74.statsWorkout` exists in App Store Connect
+  (*Apps → + → New App*). The App ID itself is created automatically by Xcode.
