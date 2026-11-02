@@ -62,8 +62,10 @@ If `xcodebuild` reports that it requires Xcode, point the toolchain at a full Xc
 
 ## Switching from demo data to Apple Health
 
-Open *Settings → Data source* and turn off **Use demo data**, then grant read access when asked
-(or use *Settings → Apple Health → Request read access*). HealthKit never reveals whether read
+The first time the dashboard loads real data the app asks for Health access itself: the system
+sheet lists the seven read types (steps, walking/running, cycling and swimming distance, flights
+climbed, active energy and workouts). If you skip the sheet, turn off **Use demo data** in
+*Settings → Data source* and use *Settings → Apple Health → Request read access*. HealthKit never reveals whether read
 access was granted, so an empty dashboard means "no data" or "access denied" — the Health app
 shows the current permission under *Sharing → Apps → StatsWorkout*.
 

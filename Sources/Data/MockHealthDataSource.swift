@@ -14,6 +14,8 @@ struct MockHealthDataSource: HealthDataProviding {
 
     var isAvailable: Bool { true }
 
+    func authorizationRequestStatus() async throws -> HealthAuthorizationStatus { .unnecessary }
+
     func requestAuthorization() async throws {}
 
     func activities(in interval: DateInterval) async throws -> [ActivitySample] {
