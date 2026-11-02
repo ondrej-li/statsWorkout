@@ -176,8 +176,4 @@ final class DashboardViewModel {
             phase = .failed(error.localizedDescription)
         }
     }
-
-    func toggleDemoData(_ enabled: Bool) {
-        settings.useMockData = enabled
-    }
 }

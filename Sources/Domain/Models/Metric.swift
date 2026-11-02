@@ -39,11 +39,4 @@ enum Metric: String, CaseIterable, Identifiable, Codable, Sendable {
         case .activityCount: return "figure.run"
         }
     }
-
-    var supportsUnit: Bool {
-        switch self {
-        case .steps, .activityCount: return false
-        case .distance, .elevationGain, .exerciseDuration: return true
-        }
-    }
 }
