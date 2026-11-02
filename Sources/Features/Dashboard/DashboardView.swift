@@ -108,7 +108,7 @@ struct DashboardView: View {
                     selection: selectionBinding
                 )
                 recentActivitiesCard(stats)
-                if model.showsPermissionHint {
+                if model.showsPermissionHint || model.healthAccessUnavailable {
                     permissionCard
                 }
             } else {
@@ -251,19 +251,28 @@ struct DashboardView: View {
     private var permissionCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Connect Apple Health", systemImage: "heart.text.square.fill")
-                    .font(.headline)
-                Text("Grant read access to your steps and workouts to see real statistics. Your data stays on this device.")
+                Label(
+                    model.healthAccessUnavailable ? "Apple Health unavailable" : "Connect Apple Health",
+                    systemImage: model.healthAccessUnavailable ? "heart.slash.fill" : "heart.text.square.fill"
+                )
+                .font(.headline)
+
+                Text(model.healthAccessUnavailable
+                     ? "This device does not provide HealthKit data. Turn on demo data in Settings to explore the dashboard."
+                     : "Grant read access to your steps and workouts to see real statistics. Your data stays on this device.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Button {
-                    Task { await model.requestHealthAccess() }
-                } label: {
-                    Text(model.isRequestingAuthorization ? "Requesting…" : "Allow access")
-                        .frame(maxWidth: .infinity)
+
+                if !model.healthAccessUnavailable {
+                    Button {
+                        Task { await model.requestHealthAccess() }
+                    } label: {
+                        Text(model.isRequestingAuthorization ? "Requesting…" : "Allow access")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.isRequestingAuthorization)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(model.isRequestingAuthorization)
             }
         }
     }
