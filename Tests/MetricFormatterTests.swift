@@ -62,6 +62,15 @@ struct PeriodFormatterTests {
     }
     private var period: PeriodCalendar { TestSupport.period(calendar) }
 
+    @Test("Day and rolling day titles")
+    func shortRangeTitles() {
+        let day = period.range(for: .day, containing: TestSupport.date(calendar, 2026, 11, 4))
+        #expect(formatter.rangeTitle(for: day) == "Wednesday, Nov 4")
+
+        let rolling = period.range(for: .last24Hours, containing: TestSupport.date(calendar, 2026, 11, 4, 9, 30))
+        #expect(formatter.rangeTitle(for: rolling) == "Last 24 hours")
+    }
+
     @Test("Range titles")
     func rangeTitles() {
         let month = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 14))

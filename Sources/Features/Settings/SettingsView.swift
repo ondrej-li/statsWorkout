@@ -92,8 +92,12 @@ struct SettingsView: View {
                 Section {
                     LabeledContent("Version", value: Bundle.main.appVersion)
                     LabeledContent("Minimum iOS", value: "26.0")
+                    Link("Privacy policy", destination: AppLinks.privacyPolicy)
+                    Link("Support", destination: AppLinks.support)
                 } header: {
                     Text("About")
+                } footer: {
+                    Text("StatsWorkout is made by Ondřej Linek. Questions: ondrej.linek@gmail.com")
                 }
             }
             .navigationTitle("Settings")

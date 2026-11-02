@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://stats-workout.ondralinek.cz/sitemap.xml

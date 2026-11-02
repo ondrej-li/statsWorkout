@@ -79,10 +79,12 @@ enum ActivityKind: String, CaseIterable, Identifiable, Codable, Sendable {
     }
 }
 
-/// All-day step total for a single calendar day.
+/// Step total for one bucket (an hour or a day, depending on the query).
 struct StepSample: Identifiable, Hashable, Sendable {
-    let day: Date
+    let start: Date
+    let end: Date
     let count: Double
 
-    var id: Date { day }
+    var id: Date { start }
+    var duration: TimeInterval { end.timeIntervalSince(start) }
 }

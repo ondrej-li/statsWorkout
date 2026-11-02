@@ -29,11 +29,18 @@ enum HealthDataError: LocalizedError, Sendable {
     }
 }
 
+/// Resolution requested for step samples. Hourly samples back the day and
+/// 24-hour views; daily samples are enough for everything else.
+enum StepGranularity: Sendable, Hashable {
+    case hour
+    case day
+}
+
 /// Abstraction over Apple Health so the UI can run on mock data and tests never touch HealthKit.
 protocol HealthDataProviding: Sendable {
     var isAvailable: Bool { get }
     func authorizationRequestStatus() async throws -> HealthAuthorizationStatus
     func requestAuthorization() async throws
     func activities(in interval: DateInterval) async throws -> [ActivitySample]
-    func dailySteps(in interval: DateInterval) async throws -> [StepSample]
+    func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample]
 }

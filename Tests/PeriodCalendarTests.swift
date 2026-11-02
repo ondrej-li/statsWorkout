@@ -91,6 +91,53 @@ struct PeriodCalendarTests {
         #expect(period.granularity(for: long) == .month)
     }
 
+    @Test("Day period uses hourly buckets")
+    func dayRange() {
+        let range = period.range(for: .day, containing: TestSupport.date(calendar, 2026, 11, 4, 15))
+
+        #expect(range.start == TestSupport.date(calendar, 2026, 11, 4))
+        #expect(range.end == TestSupport.date(calendar, 2026, 11, 5))
+        #expect(period.granularity(for: range) == .hour)
+
+        let buckets = period.buckets(for: range)
+        #expect(buckets.count == 24)
+        #expect(buckets[15].start == TestSupport.date(calendar, 2026, 11, 4, 15))
+    }
+
+    @Test("24-hour period is a rolling window aligned to the hour")
+    func rollingDayRange() {
+        let now = TestSupport.date(calendar, 2026, 11, 4, 15, 20)
+        let range = period.range(for: .last24Hours, containing: now)
+
+        #expect(range.start == TestSupport.date(calendar, 2026, 11, 3, 16))
+        #expect(range.end == TestSupport.date(calendar, 2026, 11, 4, 16))
+        #expect(range.contains(now))
+        #expect(period.buckets(for: range).count == 24)
+
+        let previous = period.offset(range, by: -1)
+        #expect(previous.end == range.start)
+        #expect(previous.start == TestSupport.date(calendar, 2026, 11, 2, 16))
+    }
+
+    @Test("Custom range of one day uses hourly buckets")
+    func customSingleDay() {
+        let range = period.customRange(
+            start: TestSupport.date(calendar, 2026, 11, 4, 9),
+            end: TestSupport.date(calendar, 2026, 11, 4, 9)
+        )
+        #expect(period.granularity(for: range) == .hour)
+        #expect(period.buckets(for: range).count == 24)
+    }
+
+    @Test("A daylight-saving day has 23 hourly buckets")
+    func daylightSavingDay() {
+        let prague = TestSupport.calendar(timeZone: "Europe/Prague")
+        let period = TestSupport.period(prague)
+        let range = period.range(for: .day, containing: TestSupport.date(prague, 2026, 3, 29, 12))
+
+        #expect(period.buckets(for: range).count == 23)
+    }
+
     @Test("Buckets survive a daylight-saving transition")
     func daylightSavingTransition() {
         let prague = TestSupport.calendar(timeZone: "Europe/Prague")

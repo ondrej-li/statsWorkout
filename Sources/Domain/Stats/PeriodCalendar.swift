@@ -15,6 +15,10 @@ struct PeriodCalendar: Sendable, Equatable {
 
     func range(for kind: PeriodKind, containing date: Date) -> PeriodRange {
         switch kind {
+        case .last24Hours:
+            return makeRange(kind: .last24Hours, interval: rollingDayInterval(endingAt: date), fallback: date)
+        case .day:
+            return makeRange(kind: .day, interval: calendar.dateInterval(of: .day, for: date), fallback: date)
         case .week:
             return makeRange(kind: .week, interval: calendar.dateInterval(of: .weekOfYear, for: date), fallback: date)
         case .month:
@@ -55,6 +59,16 @@ struct PeriodCalendar: Sendable, Equatable {
             let start = calendar.date(byAdding: .day, value: shift, to: range.start) ?? range.start
             let end = calendar.date(byAdding: .day, value: shift, to: range.end) ?? range.end
             return PeriodRange(kind: .custom, start: start, end: end)
+        case .day:
+            let anchor = calendar.date(byAdding: .day, value: value, to: range.start) ?? range.start
+            return self.range(for: .day, containing: anchor)
+        case .last24Hours:
+            let shift = Double(value) * 24 * 60 * 60
+            return PeriodRange(
+                kind: .last24Hours,
+                start: range.start.addingTimeInterval(shift),
+                end: range.end.addingTimeInterval(shift)
+            )
         case .week, .month, .quarter, .year:
             let anchor = calendar.date(byAdding: component(for: range.kind), value: value, to: range.start) ?? range.start
             return self.range(for: range.kind, containing: anchor)
@@ -76,6 +90,8 @@ struct PeriodCalendar: Sendable, Equatable {
 
     func granularity(for range: PeriodRange) -> BucketGranularity {
         switch range.kind {
+        case .last24Hours, .day:
+            return .hour
         case .week, .month:
             return .day
         case .quarter:
@@ -84,6 +100,7 @@ struct PeriodCalendar: Sendable, Equatable {
             return .month
         case .custom:
             let days = range.dayCount(in: calendar)
+            if days <= 2 { return .hour }
             if days <= 45 { return .day }
             if days <= 200 { return .week }
             return .month
@@ -94,6 +111,7 @@ struct PeriodCalendar: Sendable, Equatable {
         let granularity = granularity(for: range)
         let step: Calendar.Component
         switch granularity {
+        case .hour: step = .hour
         case .day: step = .day
         case .week: step = .weekOfYear
         case .month: step = .month
@@ -155,12 +173,22 @@ struct PeriodCalendar: Sendable, Equatable {
 
     private func component(for kind: PeriodKind) -> Calendar.Component {
         switch kind {
+        case .last24Hours, .day: return .day
         case .week: return .weekOfYear
         case .month: return .month
         case .quarter: return .month
         case .year: return .year
         case .custom: return .day
         }
+    }
+
+    /// Rolling 24-hour window aligned to the hour boundary that contains `date`,
+    /// so the buckets line up with clock hours.
+    private func rollingDayInterval(endingAt date: Date) -> DateInterval {
+        let hour = calendar.dateInterval(of: .hour, for: date)
+        let end = hour?.end ?? date
+        let start = calendar.date(byAdding: .hour, value: -24, to: end) ?? end.addingTimeInterval(-86_400)
+        return DateInterval(start: start, end: end)
     }
 
     private func makeRange(kind: PeriodKind, interval: DateInterval?, fallback date: Date) -> PeriodRange {

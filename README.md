@@ -16,8 +16,8 @@ press-and-drag value inspection.
 
 ## Features
 
-- **Periods** — calendar week, month (default), quarter, year and custom ranges, with back/forward
-  navigation, "Today" and locale-aware week boundaries.
+- **Periods** — rolling 24 hours, calendar day (hourly buckets), week, month (default), quarter,
+  year and custom ranges, with back/forward navigation, "Today" and locale-aware week boundaries.
 - **Metrics** — steps, distance, elevation gain, exercise duration and activity count.
 - **Comparison** — every metric is compared with the previous period (or the same period last year),
   limited to the elapsed part of the period so partial months compare fairly.
@@ -153,3 +153,20 @@ The script archives in Release, signs with automatic provisioning for team
 - Xcode is signed in with the team's Apple ID (*Xcode → Settings → Accounts*).
 - An app record for `com.defik74.statsWorkout` exists in App Store Connect
   (*Apps → + → New App*). The App ID itself is created automatically by Xcode.
+
+
+## App Store pages
+
+The privacy policy and support pages required for App Store review live in [Website/](Website) and
+are published at:
+
+- https://stats-workout.ondralinek.cz/ — landing page (English, Czech under `/cs/`)
+- https://stats-workout.ondralinek.cz/privacy.html
+- https://stats-workout.ondralinek.cz/support.html
+
+```bash
+make deploy-site   # rsync Website/ to deploy@2.31.33.21:/var/www/stats-workout
+```
+
+The app links to the same pages from *Settings → About*. Submission metadata (description,
+keywords, privacy answers, review notes) is drafted in [docs/app-store.md](docs/app-store.md).

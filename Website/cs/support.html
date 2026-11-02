@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Podpora — StatsWorkout</title>
+<meta name="description" content="Jak propojit StatsWorkout s Apple Health, jak číst grafy, změnit jednotky a co dělat, když jsou grafy prázdné.">
+<meta name="theme-color" content="#070d16">
+<link rel="canonical" href="https://stats-workout.ondralinek.cz/cs/support.html">
+<link rel="alternate" hreflang="en" href="https://stats-workout.ondralinek.cz/support.html">
+<link rel="alternate" hreflang="cs" href="https://stats-workout.ondralinek.cz/cs/support.html">
+<link rel="alternate" hreflang="x-default" href="https://stats-workout.ondralinek.cz/support.html">
+<link rel="icon" href="/assets/icon-300.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/icon-300.png">
+<link rel="stylesheet" href="/assets/style.css?v=1">
+</head>
+<body class="doc">
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/cs/">
+      <img src="/assets/icon-300.png" alt="" width="34" height="34">
+      <span>StatsWorkout</span>
+    </a>
+    <nav>
+      <a href="/cs/privacy.html">Soukromí</a>
+      <a href="/cs/support.html" class="on">Podpora</a>
+      <a class="lang" href="/support.html" hreflang="en" lang="en">English</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap narrow">
+  <h1>Podpora</h1>
+  <p class="updated">StatsWorkout 0.1 · iOS 26 nebo novější · iPhone a iPad</p>
+
+  <p>StatsWorkout mění aktivitu z Apple Health na statistiky za týden, měsíc, čtvrtletí a rok. Všechno se počítá ve vašem zařízení, nic se neodesílá.</p>
+
+  <h2>Propojení s Apple Health</h2>
+  <p>Při prvním spuštění aplikace požádá o přístup pro čtení k Apple Health. Zvolte <strong>Vybrat vše</strong> — nebo alespoň <strong>Kroky</strong> a <strong>Tréninky</strong> — a povolte. Bez toho zůstanou grafy prázdné.</p>
+  <p>Pokud jste okno zavřeli, můžete o přístup požádat kdykoli znovu:</p>
+  <ul>
+    <li>Ve StatsWorkout: <strong>Nastavení → Apple Health → Vyžádat přístup pro čtení</strong>.</li>
+    <li>V iOS: <strong>Nastavení → Soukromí a zabezpečení → Zdraví → StatsWorkout</strong>.</li>
+  </ul>
+
+  <div class="note">
+    <p>Apple záměrně aplikacím nesděluje, zda byl přístup pro čtení udělen. Prázdný přehled tedy znamená buď „v tomto období nejsou data“, nebo „přístup není povolený“ — pravdu ukáže aplikace Zdraví v části <strong>Sdílení → Aplikace → StatsWorkout</strong>.</p>
+  </div>
+
+  <h2>Co čísla znamenají</h2>
+  <div class="table">
+    <table>
+      <thead><tr><th>Metrika</th><th>Zdroj v Apple Health</th></tr></thead>
+      <tbody>
+        <tr><td>Kroky</td><td>Kroky za celý den v daném období, ne jen z tréninků</td></tr>
+        <tr><td>Vzdálenost</td><td>Vzdálenost zaznamenaná tréninky: chůze a běh, kolo, plavání</td></tr>
+        <tr><td>Převýšení</td><td>Nastoupané převýšení z tréninků, pokud ho aplikace zaznamenala</td></tr>
+        <tr><td>Cvičení</td><td>Celková délka tréninků</td></tr>
+        <tr><td>Aktivity</td><td>Počet tréninků</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Počítají se tréninky běh, chůze, kolo, turistika, plavání, silový trénink, jóga a vše ostatní jako obecný trénink. Vzdálenost a převýšení pocházejí jen z tréninků — cesta do obchodu přidá kroky, ne kilometry.</p>
+
+  <h2>Období a srovnávání</h2>
+  <p>Vyberte <strong>24 h</strong> (posuvné okno končící aktuální hodinou), <strong>Den</strong>, <strong>Týden</strong>, <strong>Měsíc</strong>, <strong>Čtvrtletí</strong>, <strong>Rok</strong> nebo <strong>Vlastní</strong>. Šipkami u názvu se posunete o jedno období zpět či vpřed, tlačítkem <strong>Dnes</strong> se vrátíte.</p>
+  <p>Součty se srovnávají s předchozím obdobím nebo se stejným obdobím loňského roku (změnitelné v Nastavení). Rozběhnuté období se porovnává jen se stejně dlouhou částí předchozího, takže první dny měsíce se neporovnávají s celým měsícem.</p>
+
+  <h2>Práce s grafy</h2>
+  <ul>
+    <li><strong>Pinch</strong> gestem nebo tlačítky +/− přiblížíte kratší úsek.</li>
+    <li><strong>Tažením</strong> do stran se v přiblížení posouváte; kroužková šipka přiblížení zruší.</li>
+    <li><strong>Klepnutím nebo tažením</strong> po sloupci či čáře si přečtete přesnou hodnotu pro danou hodinu, den, týden nebo měsíc.</li>
+  </ul>
+
+  <h2>Jednotky</h2>
+  <p>V Nastavení → <strong>Jednotky</strong> přepnete vzdálenost mezi kilometry a mílemi a převýšení mezi metry a stopami. Všechny dlaždice, součty i osy grafů se změní okamžitě.</p>
+
+  <h2>Demo data</h2>
+  <p>Nastavení → <strong>Zdroj dat → Používat demo data</strong> naplní přehled vygenerovanou ukázkovou aktivitou. Slouží k vyzkoušení aplikace bez dat z HealthKitu; vypněte je, pokud chcete vidět skutečná čísla z Apple Health.</p>
+
+  <h2>Grafy jsou pořád prázdné</h2>
+  <ul>
+    <li>Otevřete aplikaci Zdraví a ověřte, že pro dané období opravdu existují tréninky a kroky.</li>
+    <li>Zkontrolujte, že je povolený přístup pro <em>Kroky</em> i <em>Tréninky</em> — oprávnění se udělují pro každý typ dat zvlášť.</li>
+    <li>Zkuste širší období (Rok), abyste vyloučili prázdný rozsah.</li>
+    <li>Vypněte demo data, pokud jsou zapnutá, aby aplikace četla Apple Health.</li>
+  </ul>
+
+  <h2>Kontakt</h2>
+  <p>Něco nefunguje nebo vypadá špatně? Napište na <a href="mailto:ondrej.linek@gmail.com">ondrej.linek@gmail.com</a> a přiložte model zařízení, verzi iOS a co jste očekávali.</p>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span>© 2026 Ondřej Linek</span>
+    <span><a href="/cs/privacy.html">Soukromí</a> · <a href="/cs/support.html">Podpora</a> · <a href="mailto:ondrej.linek@gmail.com">ondrej.linek@gmail.com</a></span>
+  </div>
+</footer>
+</body>
+</html>

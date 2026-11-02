@@ -22,15 +22,30 @@ struct MockHealthDataSource: HealthDataProviding {
         MockHealthData.activities(in: interval, calendar: calendar, seed: seed)
     }
 
-    func dailySteps(in interval: DateInterval) async throws -> [StepSample] {
-        MockHealthData.dailySteps(in: interval, calendar: calendar, seed: seed)
+    func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample] {
+        MockHealthData.stepSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
     }
 }
 
 enum MockHealthData {
     private static let referenceDate = Date(timeIntervalSinceReferenceDate: 0)
 
-    static func activities(in interval: DateInterval, calendar: Calendar, seed: UInt64, now: Date = Date()) -> [ActivitySample] {
+    /// Relative likelihood of steps in each hour of the day.
+    private static let hourlyWeights: [Double] = [
+        0.30, 0.20, 0.15, 0.15, 0.30, 0.80,
+        1.60, 2.60, 2.20, 1.60, 1.40, 1.50,
+        1.70, 1.60, 1.50, 1.70, 2.20, 2.60,
+        2.00, 1.40, 1.00, 0.80, 0.60, 0.40
+    ]
+
+    // MARK: - Activities
+
+    static func activities(
+        in interval: DateInterval,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [ActivitySample] {
         guard interval.duration > 0 else { return [] }
 
         var result: [ActivitySample] = []
@@ -44,7 +59,7 @@ enum MockHealthData {
 
             for slot in 0..<workoutsToday {
                 let localSeed = seed &+ index &* 131 &+ UInt64(slot) &* 17
-                result.append(makeActivity(localSeed: localSeed, day: day, calendar: calendar, index: index, slot: slot))
+                result.append(makeActivity(localSeed: localSeed, day: day, calendar: calendar))
             }
 
             guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
@@ -54,7 +69,29 @@ enum MockHealthData {
         return result.filter { $0.start >= interval.start && $0.start < limit }
     }
 
-    static func dailySteps(in interval: DateInterval, calendar: Calendar, seed: UInt64, now: Date = Date()) -> [StepSample] {
+    // MARK: - Steps
+
+    static func stepSamples(
+        in interval: DateInterval,
+        granularity: StepGranularity,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [StepSample] {
+        switch granularity {
+        case .day:
+            return dailySteps(in: interval, calendar: calendar, seed: seed, now: now)
+        case .hour:
+            return hourlySteps(in: interval, calendar: calendar, seed: seed, now: now)
+        }
+    }
+
+    static func dailySteps(
+        in interval: DateInterval,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [StepSample] {
         guard interval.duration > 0 else { return [] }
 
         var result: [StepSample] = []
@@ -62,26 +99,66 @@ enum MockHealthData {
         let limit = min(interval.end, now)
 
         while day < limit {
-            let index = UInt64(dayIndex(for: day, calendar: calendar))
-            let noise = unitRandom(seed &+ 999, index)
-            let weekday = calendar.component(.weekday, from: day)
-            let weekend = (weekday == 1 || weekday == 7) ? 1.18 : 1.0
-            let seasonal = 0.9 + 0.22 * sin(Double(index) / 61.0)
-            let dayFraction: Double = calendar.isDate(day, inSameDayAs: now)
-                ? max(0.05, now.timeIntervalSince(calendar.startOfDay(for: day)) / 86_400)
+            let end = calendar.date(byAdding: .day, value: 1, to: day) ?? limit
+            let dayFraction = calendar.isDate(day, inSameDayAs: now)
+                ? max(0.05, now.timeIntervalSince(day) / max(end.timeIntervalSince(day), 1))
                 : 1
-            let steps = max(0, (5_200 + noise * 7_400) * weekend * seasonal * dayFraction)
-            result.append(StepSample(day: day, count: (steps / 10).rounded() * 10))
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
+            let count = dailyTotal(for: day, calendar: calendar, seed: seed) * dayFraction
+            result.append(StepSample(start: day, end: end, count: roundedToFive(count)))
+            day = end
         }
 
-        return result.filter { $0.day < limit && $0.day.addingTimeInterval(86_400) > interval.start }
+        return result.filter { $0.end > interval.start && $0.start < limit }
+    }
+
+    static func hourlySteps(
+        in interval: DateInterval,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [StepSample] {
+        guard interval.duration > 0 else { return [] }
+
+        let limit = min(interval.end, now)
+        var cursor = calendar.dateInterval(of: .hour, for: interval.start)?.start ?? interval.start
+        let weightSum = hourlyWeights.reduce(0, +)
+
+        var result: [StepSample] = []
+        while cursor < limit {
+            let end = calendar.date(byAdding: .hour, value: 1, to: cursor) ?? limit
+            let day = calendar.startOfDay(for: cursor)
+            let hour = calendar.component(.hour, from: cursor)
+            var count = dailyTotal(for: day, calendar: calendar, seed: seed)
+                * hourlyWeights[hour] / weightSum
+
+            if cursor <= now, now < end {
+                let fraction = now.timeIntervalSince(cursor) / max(end.timeIntervalSince(cursor), 1)
+                count *= max(0.02, fraction)
+            }
+
+            result.append(StepSample(start: cursor, end: end, count: roundedToFive(count)))
+            cursor = end
+        }
+
+        return result.filter { $0.end > interval.start && $0.start < limit }
+    }
+
+    private static func dailyTotal(for day: Date, calendar: Calendar, seed: UInt64) -> Double {
+        let index = UInt64(dayIndex(for: day, calendar: calendar))
+        let noise = unitRandom(seed &+ 999, index)
+        let weekday = calendar.component(.weekday, from: day)
+        let weekend = (weekday == 1 || weekday == 7) ? 1.18 : 1.0
+        let seasonal = 0.9 + 0.22 * sin(Double(index) / 61.0)
+        return max(0, (5_200 + noise * 7_400) * weekend * seasonal)
+    }
+
+    private static func roundedToFive(_ value: Double) -> Double {
+        (value / 5).rounded() * 5
     }
 
     // MARK: - Generation
 
-    private static func makeActivity(localSeed: UInt64, day: Date, calendar: Calendar, index: UInt64, slot: Int) -> ActivitySample {
+    private static func makeActivity(localSeed: UInt64, day: Date, calendar: Calendar) -> ActivitySample {
         let kindRoll = unitRandom(localSeed, 1)
         let kind: ActivityKind
         switch kindRoll {

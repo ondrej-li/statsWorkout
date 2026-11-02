@@ -7,7 +7,7 @@ BUILD_NUMBER ?=
 PROJECT := StatsWorkout.xcodeproj
 SCHEME := StatsWorkout
 
-.PHONY: help generate build test open clean select-xcode testflight
+.PHONY: help generate build test open clean select-xcode testflight deploy-site
 
 help:
 	@echo "make generate    - regenerate $(PROJECT) from project.yml (XcodeGen)"
@@ -16,6 +16,7 @@ help:
 	@echo "make test        - run unit tests on the iOS simulator"
 	@echo "make select-xcode- point xcode-select at a full Xcode installation"
 	@echo "make testflight  - archive and upload a build to TestFlight"
+	@echo "make deploy-site - publish Website/ to stats-workout.ondralinek.cz"
 	@echo "make clean       - remove build products"
 
 generate:
@@ -41,6 +42,9 @@ select-xcode:
 
 testflight:
 	TEAM_ID=$(TEAM_ID) BUILD_NUMBER=$(BUILD_NUMBER) ./Scripts/publish-testflight.sh
+
+deploy-site:
+	./Scripts/deploy-site.sh
 
 clean:
 	rm -rf build DerivedData
