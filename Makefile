@@ -2,10 +2,11 @@ SHELL := /bin/bash
 
 XCODE_DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
 SIMULATOR ?= iPhone 17
+TEAM_ID ?= B592D69P29
 PROJECT := StatsWorkout.xcodeproj
 SCHEME := StatsWorkout
 
-.PHONY: help generate build test open clean simulator select-xcode
+.PHONY: help generate build test open clean select-xcode testflight
 
 help:
 	@echo "make generate    - regenerate $(PROJECT) from project.yml (XcodeGen)"
@@ -13,6 +14,7 @@ help:
 	@echo "make build       - build for the iOS simulator"
 	@echo "make test        - run unit tests on the iOS simulator"
 	@echo "make select-xcode- point xcode-select at a full Xcode installation"
+	@echo "make testflight  - archive and upload a build to TestFlight"
 	@echo "make clean       - remove build products"
 
 generate:
@@ -35,6 +37,9 @@ test: generate
 
 select-xcode:
 	sudo xcode-select -s $(XCODE_DEVELOPER_DIR)
+
+testflight:
+	TEAM_ID=$(TEAM_ID) ./Scripts/publish-testflight.sh
 
 clean:
 	rm -rf build DerivedData
