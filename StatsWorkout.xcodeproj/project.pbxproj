@@ -33,6 +33,7 @@
 		A3EEC10CF0A51014F2308C92 /* PeriodPickerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8139CC21593C09F4DCC4C945 /* PeriodPickerBar.swift */; };
 		AACD769FE8F401612A501C77 /* MetricUnits.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C59697BB6F54D259CC0CAE0 /* MetricUnits.swift */; };
 		B26870A61B84D2FC9F3DE473 /* MockHealthDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC61087AAF357CBEB6699FC1 /* MockHealthDataSource.swift */; };
+		C1C282E2364277D446177557 /* DataScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53C65D529022D6C734191690 /* DataScope.swift */; };
 		C4330B48059F97F3AEC8CD20 /* AppLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6728B6E12E3C25B9180A8C /* AppLinks.swift */; };
 		D2A505EAD5FE698DBC35A439 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB690E6A633A00A71DA461B /* SettingsView.swift */; };
 		D4754929029C5F7DD8A416D7 /* ActivityLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4187D987B41B8DF46878692 /* ActivityLogView.swift */; };
@@ -68,6 +69,7 @@
 		3B5B7FB76DB8385ECD1A7C4A /* HealthKitDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitDataSource.swift; sourceTree = "<group>"; };
 		3F920BC2ABC48E7083ED6DAE /* StatsAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsAggregator.swift; sourceTree = "<group>"; };
 		4FB690E6A633A00A71DA461B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		53C65D529022D6C734191690 /* DataScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataScope.swift; sourceTree = "<group>"; };
 		5B6728B6E12E3C25B9180A8C /* AppLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLinks.swift; sourceTree = "<group>"; };
 		5BBF5B431DC154B93F68153D /* MockHealthDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHealthDataTests.swift; sourceTree = "<group>"; };
 		643DB4D93822B103D10F9B01 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				9C8F3C7CDB50164BE220677B /* ActivitySample.swift */,
+				53C65D529022D6C734191690 /* DataScope.swift */,
 				240FF7A7026856831536E8B4 /* Metric.swift */,
 				2BB560F079F19CAEB0A679F6 /* PeriodKind.swift */,
 				A4CF6202FDC4E7FB5D95B735 /* PeriodStats.swift */,
@@ -365,6 +368,7 @@
 				07A23F90DB80EB9B35094814 /* CumulativeChartCard.swift in Sources */,
 				EDEEC4A69F109DCE2B845E60 /* DashboardView.swift in Sources */,
 				EF8865C3BB95C0232E071DAB /* DashboardViewModel.swift in Sources */,
+				C1C282E2364277D446177557 /* DataScope.swift in Sources */,
 				4DEAB522ED999871DDAC7F60 /* HealthDataProviding.swift in Sources */,
 				F0A285BBFB22B95F35C9BF60 /* HealthKitDataSource.swift in Sources */,
 				44E74519A6EDCF06F4B6BABE /* Metric.swift in Sources */,

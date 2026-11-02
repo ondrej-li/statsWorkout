@@ -14,13 +14,21 @@ enum PreviewStats {
 
         let activities = MockHealthData.activities(in: window, calendar: calendar, seed: 0x5EED, now: now)
         let steps = MockHealthData.dailySteps(in: window, calendar: calendar, seed: 0x5EED, now: now)
+        let distance = MockHealthData.distanceSamples(
+            in: window, granularity: .day, calendar: calendar, seed: 0x5EED, now: now
+        )
+        let elevation = MockHealthData.elevationSamples(
+            in: window, granularity: .day, calendar: calendar, seed: 0x5EED, now: now
+        )
 
         return StatsAggregator(periodCalendar: periodCalendar).stats(
             for: range,
             activities: activities,
             steps: steps,
+            distance: distance,
+            elevation: elevation,
             now: now
-        )
+        ).allData
     }
 }
 #endif

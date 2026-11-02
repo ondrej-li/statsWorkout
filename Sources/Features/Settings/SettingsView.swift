@@ -40,10 +40,15 @@ struct SettingsView: View {
                             Text(mode.title).tag(mode)
                         }
                     }
+                    Picker("Show by default", selection: $settings.dataScope) {
+                        ForEach(DataScope.allCases) { scope in
+                            Text(scope.title).tag(scope)
+                        }
+                    }
                 } header: {
                     Text("Statistics")
                 } footer: {
-                    Text("Used when the app opens and when charts show a comparison.")
+                    Text("The default period, the comparison baseline and whether the dashboard starts with continuous data or workout-only data. Both can be changed on the dashboard too.")
                 }
 
                 Section {

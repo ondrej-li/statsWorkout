@@ -16,6 +16,12 @@ struct HealthKitDataSource: HealthDataProviding {
         HKHealthStore.isHealthDataAvailable()
     }
 
+    private static let distanceQuantityTypes: [HKQuantityType] = [
+        HKQuantityType(.distanceWalkingRunning),
+        HKQuantityType(.distanceCycling),
+        HKQuantityType(.distanceSwimming)
+    ]
+
     static var readTypes: Set<HKObjectType> {
         [
             HKQuantityType(.stepCount),
@@ -71,6 +77,81 @@ struct HealthKitDataSource: HealthDataProviding {
         guard isAvailable else { throw HealthDataError.unavailable }
         guard interval.duration > 0 else { return [] }
 
+        do {
+            let collection = try await statisticsCollection(
+                for: HKQuantityType(.stepCount),
+                in: interval,
+                granularity: granularity
+            )
+            var samples: [StepSample] = []
+            collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+                let count = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                guard count > 0 else { return }
+                samples.append(
+                    StepSample(start: statistics.startDate, end: statistics.endDate, count: count)
+                )
+            }
+            return samples
+        } catch {
+            throw Self.map(error)
+        }
+    }
+
+    func distanceSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        guard isAvailable else { throw HealthDataError.unavailable }
+        guard interval.duration > 0 else { return [] }
+
+        do {
+            var buckets: [Date: (end: Date, value: Double)] = [:]
+            for type in Self.distanceQuantityTypes {
+                let collection = try await statisticsCollection(for: type, in: interval, granularity: granularity)
+                collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+                    guard let meters = statistics.sumQuantity()?.doubleValue(for: .meter()), meters > 0 else { return }
+                    let existing = buckets[statistics.startDate]
+                    buckets[statistics.startDate] = (statistics.endDate, (existing?.value ?? 0) + meters)
+                }
+            }
+            return buckets
+                .map { QuantitySample(start: $0.key, end: $0.value.end, value: $0.value.value) }
+                .sorted { $0.start < $1.start }
+        } catch {
+            throw Self.map(error)
+        }
+    }
+
+    func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        guard isAvailable else { throw HealthDataError.unavailable }
+        guard interval.duration > 0 else { return [] }
+
+        do {
+            let collection = try await statisticsCollection(
+                for: HKQuantityType(.flightsClimbed),
+                in: interval,
+                granularity: granularity
+            )
+            var samples: [QuantitySample] = []
+            collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+                let flights = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
+                guard flights > 0 else { return }
+                samples.append(
+                    QuantitySample(
+                        start: statistics.startDate,
+                        end: statistics.endDate,
+                        value: flights * WorkoutMapper.metersPerFlight
+                    )
+                )
+            }
+            return samples
+        } catch {
+            throw Self.map(error)
+        }
+    }
+
+    private func statisticsCollection(
+        for type: HKQuantityType,
+        in interval: DateInterval,
+        granularity: StepGranularity
+    ) async throws -> HKStatisticsCollection {
         let calendar = Calendar.current
         let predicate = HKQuery.predicateForSamples(
             withStart: interval.start,
@@ -90,26 +171,12 @@ struct HealthKitDataSource: HealthDataProviding {
         }
 
         let descriptor = HKStatisticsCollectionQueryDescriptor(
-            predicate: .quantitySample(type: HKQuantityType(.stepCount), predicate: predicate),
+            predicate: .quantitySample(type: type, predicate: predicate),
             options: .cumulativeSum,
             anchorDate: anchor,
             intervalComponents: components
         )
-
-        do {
-            let collection = try await descriptor.result(for: store)
-            var samples: [StepSample] = []
-            collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
-                let count = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
-                guard count > 0 else { return }
-                samples.append(
-                    StepSample(start: statistics.startDate, end: statistics.endDate, count: count)
-                )
-            }
-            return samples
-        } catch {
-            throw Self.map(error)
-        }
+        return try await descriptor.result(for: store)
     }
 
     private static func map(_ error: Error) -> HealthDataError {

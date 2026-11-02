@@ -15,6 +15,7 @@ struct DashboardView: View {
                 VStack(spacing: 14) {
                     rangeHeader
                     PeriodPickerBar(selection: model.periodKind) { model.select($0) }
+                    scopePicker
                     content
                 }
                 .padding(.horizontal, 16)
@@ -80,6 +81,27 @@ struct DashboardView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+    }
+
+    private var scopePicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("Data source", selection: Binding(
+                get: { model.dataScope },
+                set: { model.dataScope = $0 }
+            )) {
+                ForEach(DataScope.allCases) { scope in
+                    Text(scope.title).tag(scope)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text(model.dataScope.caption)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentTransition(.opacity)
+        }
+        .accessibilityElement(children: .contain)
     }
 
     // MARK: - Content

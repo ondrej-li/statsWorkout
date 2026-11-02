@@ -18,6 +18,9 @@ press-and-drag value inspection.
 
 - **Periods** — rolling 24 hours, calendar day (hourly buckets), week, month (default), quarter,
   year and custom ranges, with back/forward navigation, "Today" and locale-aware week boundaries.
+- **Two data scopes** — *All data* (continuous Health monitoring: all-day steps, walking/cycling/
+  swimming distance, ascent from flights climbed) or *Activities* (only samples inside workouts),
+  switchable on the dashboard and remembered between launches.
 - **Metrics** — steps, distance, elevation gain, exercise duration and activity count.
 - **Comparison** — every metric is compared with the previous period (or the same period last year),
   limited to the elapsed part of the period so partial months compare fairly.

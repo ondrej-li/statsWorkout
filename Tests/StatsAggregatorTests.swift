@@ -8,20 +8,27 @@ struct StatsAggregatorTests {
     private var period: PeriodCalendar { TestSupport.period(calendar) }
     private var aggregator: StatsAggregator { StatsAggregator(periodCalendar: period) }
 
+    private var november: PeriodRange {
+        period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
+    }
+
     private func activity(
         _ day: Int,
+        month: Int = 11,
         hour: Int = 8,
         minutes: Double = 60,
         distance: Double? = 10_000,
-        elevation: Double? = 120
+        elevation: Double? = 120,
+        steps: Double? = nil
     ) -> ActivitySample {
-        let start = TestSupport.date(calendar, 2026, 11, day, hour)
+        let start = TestSupport.date(calendar, 2026, month, day, hour)
         return ActivitySample(
             kind: .running,
             start: start,
             end: start.addingTimeInterval(minutes * 60),
             distanceMeters: distance,
             elevationGainMeters: elevation,
+            stepCount: steps,
             activeEnergyKilocalories: 500
         )
     }
@@ -31,31 +38,96 @@ struct StatsAggregatorTests {
         return StepSample(start: start, end: start.addingTimeInterval(86_400), count: count)
     }
 
-    @Test("Totals sum workouts and all-day steps")
-    func totals() {
-        let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
-        let stats = aggregator.stats(
+    private func daySample(_ day: Int, _ value: Double) -> QuantitySample {
+        let start = TestSupport.date(calendar, 2026, 11, day)
+        return QuantitySample(start: start, end: start.addingTimeInterval(86_400), value: value)
+    }
+
+    private func stats(
+        _ range: PeriodRange,
+        activities: [ActivitySample] = [],
+        steps: [StepSample] = [],
+        distance: [QuantitySample] = [],
+        elevation: [QuantitySample] = [],
+        now: Date,
+        scope: DataScope = .all
+    ) -> PeriodStats {
+        aggregator.stats(
             for: range,
-            activities: [activity(3), activity(10, minutes: 30, distance: 5_000, elevation: 40), activity(10, hour: 18)],
-            steps: [steps(3, 8_000), steps(4, 12_000), steps(10, 6_000)],
+            activities: activities,
+            steps: steps,
+            distance: distance,
+            elevation: elevation,
+            now: now
+        ).stats(for: scope)
+    }
+
+    @Test("Activities scope only counts samples recorded inside workouts")
+    func activitiesScope() {
+        let stats = stats(
+            november,
+            activities: [
+                activity(3, distance: 10_000, elevation: 120, steps: 4_000),
+                activity(10, minutes: 30, distance: 5_000, elevation: 40, steps: 2_000),
+                activity(10, hour: 18, distance: 10_000, elevation: 120, steps: 3_000)
+            ],
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .activities
+        )
+
+        let expectedDuration: TimeInterval = 60 * 60 * 2 + 30 * 60
+
+        #expect(stats.totals.activityCount == 3)
+        #expect(stats.totals.steps == 9_000)
+        #expect(stats.totals.distanceMeters == 25_000)
+        #expect(stats.totals.elevationGainMeters == 280)
+        #expect(stats.totals.exerciseDuration == expectedDuration)
+    }
+
+    @Test("All-data scope uses continuous monitoring for steps, distance and elevation")
+    func allDataScope() {
+        let stats = stats(
+            november,
+            activities: [activity(3, distance: 5_000, elevation: 100, steps: 1_000)],
+            steps: [steps(3, 8_000)],
+            distance: [daySample(3, 12_000)],
+            elevation: [daySample(3, 60)],
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .all
+        )
+
+        #expect(stats.totals.steps == 8_000)
+        #expect(stats.totals.distanceMeters == 12_000)
+        // Elevation keeps the larger of the two sources.
+        #expect(stats.totals.elevationGainMeters == 100)
+        #expect(stats.totals.activityCount == 1)
+        #expect(stats.totals.exerciseDuration == 3_600)
+    }
+
+    @Test("Both scopes are produced by a single aggregation pass")
+    func bothScopes() {
+        let aggregated = aggregator.stats(
+            for: november,
+            activities: [activity(3, steps: 1_000)],
+            steps: [steps(3, 8_000)],
+            distance: [daySample(3, 12_000)],
+            elevation: [],
             now: TestSupport.date(calendar, 2026, 11, 20)
         )
 
-        #expect(stats.totals.activityCount == 3)
-        #expect(stats.totals.steps == 26_000)
-        #expect(stats.totals.distanceMeters == 25_000)
-        #expect(stats.totals.elevationGainMeters == 280)
-        #expect(stats.totals.exerciseDuration == 60 * 60 * 2 + 30 * 60)
+        #expect(aggregated.activities.totals.steps == 1_000)
+        #expect(aggregated.allData.totals.steps == 8_000)
+        #expect(aggregated.stats(for: .activities) == aggregated.activities)
     }
 
     @Test("Each activity lands in its own day bucket")
     func bucketAssignment() {
-        let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
-        let stats = aggregator.stats(
-            for: range,
+        let stats = stats(
+            november,
             activities: [activity(3), activity(10, hour: 18)],
             steps: [steps(4, 9_000)],
-            now: TestSupport.date(calendar, 2026, 11, 20)
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .all
         )
 
         #expect(stats.buckets.count == 30)
@@ -65,26 +137,29 @@ struct StatsAggregatorTests {
         #expect(stats.buckets[0].totals.isEmpty)
     }
 
+    @Test("Hourly step samples land in the matching hour bucket")
+    func hourlyStepBuckets() {
+        let range = period.range(for: .day, containing: TestSupport.date(calendar, 2026, 11, 4, 12))
+        let hour = TestSupport.date(calendar, 2026, 11, 4, 9)
+        let sample = StepSample(start: hour, end: hour.addingTimeInterval(3_600), count: 700)
+
+        let stats = stats(range, steps: [sample], now: TestSupport.date(calendar, 2026, 11, 4, 13))
+
+        #expect(stats.buckets.count == 24)
+        #expect(stats.buckets[9].totals.steps == 700)
+        #expect(stats.totals.steps == 700)
+    }
+
     @Test("Comparison only counts the elapsed part of the previous period")
     func partialComparison() {
-        var previousMonth = Calendar(identifier: .gregorian)
-        previousMonth.timeZone = TimeZone(identifier: "UTC")!
-        let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
-
-        // 12 days elapsed: 1 Nov 00:00 -> 13 Nov 00:00
-        let now = TestSupport.date(calendar, 2026, 11, 13)
-        let stats = aggregator.stats(
-            for: range,
-            activities: [
-                activity(5, distance: 10_000),
-                activity(20, distance: 10_000)
-            ],
+        let stats = stats(
+            november,
+            activities: [activity(5, distance: 10_000), activity(20, distance: 10_000)],
             steps: [steps(5, 10_000), steps(25, 10_000)],
-            now: now
+            now: TestSupport.date(calendar, 2026, 11, 13)
         )
 
-        // Previous period = October. Its first 12 days are used for comparison.
-        #expect(stats.comparisonTotals.isEmpty) // no October samples were supplied
+        #expect(stats.comparisonTotals.isEmpty)  // no October samples were supplied
         #expect(stats.elapsedBucketCount == 13)
         #expect(stats.totals.activityCount == 2)
         #expect(stats.previousSeries.count == 30)
@@ -92,34 +167,28 @@ struct StatsAggregatorTests {
 
     @Test("Delta compares against the same elapsed window")
     func delta() {
-        let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
-        let octoberRun = ActivitySample(
-            kind: .running,
-            start: TestSupport.date(calendar, 2026, 10, 6, 8),
-            end: TestSupport.date(calendar, 2026, 10, 6, 9),
-            distanceMeters: 10_000
-        )
-
-        let stats = aggregator.stats(
-            for: range,
-            activities: [activity(6, distance: 15_000), octoberRun],
-            steps: [],
-            now: TestSupport.date(calendar, 2026, 11, 20)
+        let october = activity(6, month: 10, distance: 10_000, steps: 2_000)
+        let stats = stats(
+            november,
+            activities: [activity(6, distance: 15_000, steps: 5_000), october],
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .activities
         )
 
         #expect(stats.comparisonTotals.activityCount == 1)
         #expect(stats.delta(of: .distance) == 0.5)
-        #expect(stats.delta(of: .steps) == nil)
+        #expect(stats.delta(of: .steps) == 1.5)
     }
 
     @Test("Cumulative series grows monotonically")
     func cumulativeSeries() {
         let range = period.range(for: .week, containing: TestSupport.date(calendar, 2026, 11, 4))
-        let stats = aggregator.stats(
-            for: range,
+        let stats = stats(
+            range,
             activities: [activity(3, distance: 5_000), activity(5, distance: 7_000)],
             steps: [steps(3, 1_000), steps(4, 2_000)],
-            now: TestSupport.date(calendar, 2026, 11, 8)
+            now: TestSupport.date(calendar, 2026, 11, 8),
+            scope: .activities
         )
 
         let cumulative = stats.cumulativeSeries(of: .distance)
@@ -132,32 +201,9 @@ struct StatsAggregatorTests {
         #expect(previous.allSatisfy { $0 == 0 })
     }
 
-    @Test("Hourly step samples land in the matching hour bucket")
-    func hourlyStepBuckets() {
-        let range = period.range(for: .day, containing: TestSupport.date(calendar, 2026, 11, 4, 12))
-        let hour = TestSupport.date(calendar, 2026, 11, 4, 9)
-        let sample = StepSample(start: hour, end: hour.addingTimeInterval(3_600), count: 700)
-
-        let stats = aggregator.stats(
-            for: range,
-            activities: [],
-            steps: [sample],
-            now: TestSupport.date(calendar, 2026, 11, 4, 13)
-        )
-
-        #expect(stats.buckets.count == 24)
-        #expect(stats.buckets[9].totals.steps == 700)
-        #expect(stats.totals.steps == 700)
-    }
-
     @Test("Samples outside the range are ignored")
     func ignoresOutOfRangeSamples() {
-        let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
-        let octoberActivity = ActivitySample(
-            kind: .cycling,
-            start: TestSupport.date(calendar, 2026, 10, 20, 9),
-            end: TestSupport.date(calendar, 2026, 10, 20, 10)
-        )
+        let octoberActivity = activity(20, month: 10)
         let octoberDay = TestSupport.date(calendar, 2026, 10, 20)
         let octoberSteps = StepSample(
             start: octoberDay,
@@ -165,8 +211,8 @@ struct StatsAggregatorTests {
             count: 7_000
         )
 
-        let stats = aggregator.stats(
-            for: range,
+        let stats = stats(
+            november,
             activities: [activity(2), octoberActivity],
             steps: [steps(2, 5_000), octoberSteps],
             now: TestSupport.date(calendar, 2026, 11, 20)

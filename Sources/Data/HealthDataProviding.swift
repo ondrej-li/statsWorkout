@@ -43,4 +43,8 @@ protocol HealthDataProviding: Sendable {
     func requestAuthorization() async throws
     func activities(in interval: DateInterval) async throws -> [ActivitySample]
     func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample]
+    /// Continuously monitored walking/running, cycling and swimming distance.
+    func distanceSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample]
+    /// Continuously monitored ascent, derived from flights climbed.
+    func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample]
 }

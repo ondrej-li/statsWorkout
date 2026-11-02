@@ -25,6 +25,14 @@ struct MockHealthDataSource: HealthDataProviding {
     func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample] {
         MockHealthData.stepSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
     }
+
+    func distanceSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        MockHealthData.distanceSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
+    }
+
+    func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        MockHealthData.elevationSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
+    }
 }
 
 enum MockHealthData {
@@ -143,6 +151,74 @@ enum MockHealthData {
         return result.filter { $0.end > interval.start && $0.start < limit }
     }
 
+    // MARK: - Continuous distance and elevation
+
+    static func distanceSamples(
+        in interval: DateInterval,
+        granularity: StepGranularity,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [QuantitySample] {
+        let steps = stepSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed, now: now)
+        return steps.map { sample in
+            let day = calendar.startOfDay(for: sample.start)
+            let index = UInt64(dayIndex(for: day, calendar: calendar))
+            let stride = 0.72 + unitRandom(seed &+ 4_242, index) * 0.12
+            return QuantitySample(start: sample.start, end: sample.end, value: sample.count * stride)
+        }
+    }
+
+    static func elevationSamples(
+        in interval: DateInterval,
+        granularity: StepGranularity,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [QuantitySample] {
+        guard interval.duration > 0 else { return [] }
+        let limit = min(interval.end, now)
+
+        var result: [QuantitySample] = []
+        var cursor = calendar.startOfDay(for: interval.start)
+        let weightSum = hourlyWeights.reduce(0, +)
+
+        while cursor < limit {
+            let dayIndexValue = UInt64(dayIndex(for: cursor, calendar: calendar))
+            let flights = (unitRandom(seed &+ 777, dayIndexValue) * 14).rounded()
+            let dayEnd = calendar.date(byAdding: .day, value: 1, to: cursor) ?? limit
+
+            if flights > 0 {
+                switch granularity {
+                case .day:
+                    let end = min(dayEnd, limit)
+                    if end > interval.start {
+                        result.append(
+                            QuantitySample(
+                                start: max(cursor, interval.start),
+                                end: end,
+                                value: flights * WorkoutMapper.metersPerFlight
+                            )
+                        )
+                    }
+                case .hour:
+                    for hour in 0..<24 {
+                        guard let start = calendar.date(byAdding: .hour, value: hour, to: cursor),
+                              start < limit else { continue }
+                        let end = calendar.date(byAdding: .hour, value: 1, to: start) ?? limit
+                        let value = flights * WorkoutMapper.metersPerFlight * hourlyWeights[hour] / weightSum
+                        guard value > 0 else { continue }
+                        result.append(QuantitySample(start: start, end: end, value: value))
+                    }
+                }
+            }
+
+            cursor = dayEnd
+        }
+
+        return result
+    }
+
     private static func dailyTotal(for day: Date, calendar: Calendar, seed: UInt64) -> Double {
         let index = UInt64(dayIndex(for: day, calendar: calendar))
         let noise = unitRandom(seed &+ 999, index)
@@ -203,6 +279,16 @@ enum MockHealthData {
 
         let energy = distanceMeters.map { $0 / 1_000 * 62 } ?? (durationMinutes * 6.5)
 
+        let stepCount: Double? = {
+            guard let distanceMeters else { return nil }
+            switch kind {
+            case .running, .walking, .hiking:
+                return (distanceMeters / 0.78).rounded()
+            default:
+                return nil
+            }
+        }()
+
         return ActivitySample(
             id: deterministicUUID(localSeed),
             kind: kind,
@@ -210,6 +296,7 @@ enum MockHealthData {
             end: end,
             distanceMeters: distanceMeters,
             elevationGainMeters: elevationMeters,
+            stepCount: stepCount,
             activeEnergyKilocalories: energy
         )
     }

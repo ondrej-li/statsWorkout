@@ -10,6 +10,7 @@ final class AppSettings {
     var comparisonMode: ComparisonMode { didSet { store(comparisonMode.rawValue, forKey: Key.comparisonMode) } }
     var preferredPeriod: PeriodKind { didSet { store(preferredPeriod.rawValue, forKey: Key.preferredPeriod) } }
     var useMockData: Bool { didSet { store(useMockData, forKey: Key.useMockData) } }
+    var dataScope: DataScope { didSet { store(dataScope.rawValue, forKey: Key.dataScope) } }
 
     private let defaults: UserDefaults
     private let persists: Bool
@@ -22,11 +23,13 @@ final class AppSettings {
         let storedElevation = defaults.string(forKey: Key.elevationUnit).flatMap(ElevationUnit.init(rawValue:))
         let storedComparison = defaults.string(forKey: Key.comparisonMode).flatMap(ComparisonMode.init(rawValue:))
         let storedPeriod = defaults.string(forKey: Key.preferredPeriod).flatMap(PeriodKind.init(rawValue:))
+        let storedScope = defaults.string(forKey: Key.dataScope).flatMap(DataScope.init(rawValue:))
 
         distanceUnit = storedDistance ?? .kilometers
         elevationUnit = storedElevation ?? .meters
         comparisonMode = storedComparison ?? .previousPeriod
         preferredPeriod = storedPeriod ?? .month
+        dataScope = storedScope ?? .all
 
         if defaults.object(forKey: Key.useMockData) == nil {
             useMockData = Self.defaultsToMockData
@@ -58,5 +61,6 @@ final class AppSettings {
         static let comparisonMode = "settings.comparisonMode"
         static let preferredPeriod = "settings.preferredPeriod"
         static let useMockData = "settings.useMockData"
+        static let dataScope = "settings.dataScope"
     }
 }

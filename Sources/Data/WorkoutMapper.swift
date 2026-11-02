@@ -27,6 +27,10 @@ enum WorkoutMapper {
             end: workout.endDate,
             distanceMeters: distance(for: workout, kind: activityKind),
             elevationGainMeters: elevationGain(for: workout),
+            stepCount: workout
+                .statistics(for: HKQuantityType(.stepCount))?
+                .sumQuantity()?
+                .doubleValue(for: .count()),
             activeEnergyKilocalories: workout
                 .statistics(for: HKQuantityType(.activeEnergyBurned))?
                 .sumQuantity()?
