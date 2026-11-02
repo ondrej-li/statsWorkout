@@ -22,8 +22,17 @@ final class DashboardViewModel {
     var metric: Metric = .steps
     var selectedBucketIndex: Int?
     var phase: Phase = .loading
-    var stats: PeriodStats?
+    var aggregated: AggregatedStats?
     var recentActivities: [ActivitySample] = []
+
+    var stats: PeriodStats? { aggregated?.stats(for: dataScope) }
+
+    /// Which samples the dashboard shows. Switching is instant: both scopes are
+    /// computed from the samples that were already fetched.
+    var dataScope: DataScope {
+        get { settings.dataScope }
+        set { settings.dataScope = newValue }
+    }
     var isRequestingAuthorization = false
     var customStart: Date
     var customEnd: Date
@@ -148,19 +157,28 @@ final class DashboardViewModel {
                 : .day
             async let activitiesTask = source.activities(in: window)
             async let stepsTask = source.stepSamples(in: window, granularity: stepGranularity)
-            let (activities, steps) = try await (activitiesTask, stepsTask)
+            async let distanceTask = source.distanceSamples(in: window, granularity: stepGranularity)
+            async let elevationTask = source.elevationSamples(in: window, granularity: stepGranularity)
+            let (activities, steps, distance, elevation) = try await (
+                activitiesTask,
+                stepsTask,
+                distanceTask,
+                elevationTask
+            )
 
             guard generation == loadGeneration else { return }
 
-            let stats = StatsAggregator(periodCalendar: environment.periodCalendar).stats(
+            let aggregated = StatsAggregator(periodCalendar: environment.periodCalendar).stats(
                 for: request.range,
                 activities: activities,
                 steps: steps,
+                distance: distance,
+                elevation: elevation,
                 comparison: request.comparison,
                 now: environment.now()
             )
 
-            self.stats = stats
+            self.aggregated = aggregated
             self.recentActivities = activities
                 .filter { request.range.contains($0.start) }
                 .sorted { $0.start > $1.start }

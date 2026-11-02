@@ -46,6 +46,34 @@ struct MockHealthDataTests {
         #expect(samples.allSatisfy { $0.count >= 0 })
     }
 
+    @Test("Continuous distance follows the generated steps")
+    func distanceSamples() {
+        let now = TestSupport.date(calendar, 2026, 11, 2, 10, 0)
+        let steps = MockHealthData.dailySteps(in: window, calendar: calendar, seed: 5, now: now)
+        let distance = MockHealthData.distanceSamples(
+            in: window, granularity: .day, calendar: calendar, seed: 5, now: now
+        )
+
+        #expect(distance.count == steps.count)
+        for (sample, step) in zip(distance, steps) {
+            // Roughly 0.7-0.85 m per step.
+            #expect(sample.value > step.count * 0.6)
+            #expect(sample.value < step.count * 0.95)
+        }
+    }
+
+    @Test("Continuous elevation is derived from flights climbed")
+    func elevationSamples() {
+        let now = TestSupport.date(calendar, 2026, 11, 2, 10, 0)
+        let samples = MockHealthData.elevationSamples(
+            in: window, granularity: .day, calendar: calendar, seed: 5, now: now
+        )
+
+        #expect(!samples.isEmpty)
+        #expect(samples.allSatisfy { $0.start < now })
+        #expect(samples.allSatisfy { $0.value > 0 })
+    }
+
     @Test("Generation is deterministic for a fixed seed")
     func deterministic() {
         let now = TestSupport.date(calendar, 2026, 11, 2, 10, 0)

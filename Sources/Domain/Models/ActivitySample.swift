@@ -8,6 +8,7 @@ struct ActivitySample: Identifiable, Hashable, Sendable {
     let end: Date
     let distanceMeters: Double?
     let elevationGainMeters: Double?
+    let stepCount: Double?
     let activeEnergyKilocalories: Double?
 
     init(
@@ -17,6 +18,7 @@ struct ActivitySample: Identifiable, Hashable, Sendable {
         end: Date,
         distanceMeters: Double? = nil,
         elevationGainMeters: Double? = nil,
+        stepCount: Double? = nil,
         activeEnergyKilocalories: Double? = nil
     ) {
         self.id = id
@@ -25,6 +27,7 @@ struct ActivitySample: Identifiable, Hashable, Sendable {
         self.end = end
         self.distanceMeters = distanceMeters
         self.elevationGainMeters = elevationGainMeters
+        self.stepCount = stepCount
         self.activeEnergyKilocalories = activeEnergyKilocalories
     }
 
@@ -84,6 +87,17 @@ struct StepSample: Identifiable, Hashable, Sendable {
     let start: Date
     let end: Date
     let count: Double
+
+    var id: Date { start }
+    var duration: TimeInterval { end.timeIntervalSince(start) }
+}
+
+/// A continuously monitored quantity for one bucket, e.g. distance in metres
+/// or elevation in metres.
+struct QuantitySample: Identifiable, Hashable, Sendable {
+    let start: Date
+    let end: Date
+    let value: Double
 
     var id: Date { start }
     var duration: TimeInterval { end.timeIntervalSince(start) }

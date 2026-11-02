@@ -30,6 +30,7 @@ struct MetricTotals: Equatable, Sendable {
         exerciseDuration += activity.duration
         distanceMeters += activity.distanceMeters ?? 0
         elevationGainMeters += activity.elevationGainMeters ?? 0
+        steps += activity.stepCount ?? 0
     }
 
     static func + (lhs: MetricTotals, rhs: MetricTotals) -> MetricTotals {

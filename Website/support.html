@@ -47,20 +47,28 @@
     <p>Apple deliberately never tells apps whether read access was granted. If the dashboard is empty, it is either "no data in this period" or "access not granted" — the Health app shows the truth under <strong>Sharing → Apps → StatsWorkout</strong>.</p>
   </div>
 
+  <h2>All data vs Activities</h2>
+  <p>The switch under the period chips changes where the numbers come from:</p>
+  <ul>
+    <li><strong>All data</strong> — everything Apple Health monitors continuously: all-day steps, walking/running, cycling and swimming distance, and ascent estimated from flights climbed. Workouts are part of that total, because Health counts them too.</li>
+    <li><strong>Activities</strong> — only what was recorded inside a workout: steps taken during the workout, the workout's own distance and its recorded ascent.</li>
+  </ul>
+  <p>Exercise time and the number of activities always come from workouts; Health has no continuous equivalent for them. Elevation in the All data view is the larger of the continuous ascent (flights climbed × 3 m) and the ascent recorded by a workout, so a hike is not lost when stairs were the only thing Health measured.</p>
+
   <h2>What the numbers mean</h2>
   <div class="table">
     <table>
-      <thead><tr><th>Metric</th><th>Source in Apple Health</th></tr></thead>
+      <thead><tr><th>Metric</th><th>All data</th><th>Activities</th></tr></thead>
       <tbody>
-        <tr><td>Steps</td><td>All-day step count for the period, not just workouts</td></tr>
-        <tr><td>Distance</td><td>Distance recorded by workouts: walking and running, cycling, swimming</td></tr>
-        <tr><td>Elevation</td><td>Elevation ascended in workouts, when the recording app provides it</td></tr>
-        <tr><td>Exercise</td><td>Total duration of workouts</td></tr>
-        <tr><td>Activities</td><td>Number of workouts</td></tr>
+        <tr><td>Steps</td><td>All-day step count</td><td>Steps recorded during workouts</td></tr>
+        <tr><td>Distance</td><td>Continuous walking/running, cycling and swimming distance</td><td>Distance recorded by the workouts</td></tr>
+        <tr><td>Elevation</td><td>Flights climbed converted to metres, or the workout's ascent if larger</td><td>Ascent recorded by the workouts</td></tr>
+        <tr><td>Exercise</td><td>Total workout duration</td><td>Total workout duration</td></tr>
+        <tr><td>Activities</td><td>Number of workouts</td><td>Number of workouts</td></tr>
       </tbody>
     </table>
   </div>
-  <p>Counted workout types are running, walking, cycling, hiking, swimming, strength training, yoga and everything else as a general workout. Distance and elevation only come from workouts — a walk to the shop adds steps, not kilometres.</p>
+  <p>Counted workout types are running, walking, cycling, hiking, swimming, strength training, yoga and everything else as a general workout.</p>
 
   <h2>Periods and comparisons</h2>
   <p>Choose <strong>24h</strong> (rolling window ending with the current hour), <strong>Day</strong>, <strong>Week</strong>, <strong>Month</strong>, <strong>Quarter</strong>, <strong>Year</strong> or <strong>Custom</strong>. Use the arrows next to the title to move one period back or forward, and <strong>Today</strong> to return.</p>

@@ -44,6 +44,8 @@ Pick a period — the last 24 hours, a single day, a calendar week, a month, a q
 • time spent exercising
 • number of activities
 
+Switch between "All data" and "Activities" at any time: All data shows everything Apple Health monitors continuously — all-day steps, walking/running, cycling and swimming distance, ascent from flights climbed — while Activities shows only what was recorded inside a workout. Everything is computed on device, so switching is instant.
+
 Every period comes with a total, an average, the best bucket and a comparison against the previous period or the same period last year. A month in progress is only compared with the same elapsed days, so the numbers stay honest.
 
 The charts are built for fingers: pinch to zoom into a shorter stretch, drag to pan, and tap a bar or the progress line to read the exact value for that hour, day, week or month. The progress chart shows your running total against the previous period, so you can see at a glance whether you are ahead.
@@ -71,6 +73,8 @@ Vyberte období — posledních 24 hodin, jeden den, kalendářní týden, měs�
 • nastoupané převýšení
 • čas strávený cvičením
 • počet aktivit
+
+Kdykoli můžete přepnout mezi „Všechna data" a „Aktivity": Všechna data ukazují vše, co Apple Health sleduje průběžně — kroky za celý den, vzdálenost chůze a běhu, kola a plavání, převýšení ze zdolaných pater — zatímco Aktivity jen to, co bylo zaznamenáno uvnitř tréninku. Vše se počítá v zařízení, takže přepnutí je okamžité.
 
 Ke každému období patří součet, průměr, nejlepší úsek a srovnání s předchozím obdobím nebo se stejným obdobím loňského roku. Rozběhnutý měsíc se porovnává jen se stejně dlouhou částí toho předchozího, takže čísla zůstávají poctivá.
 

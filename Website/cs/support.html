@@ -47,20 +47,28 @@
     <p>Apple záměrně aplikacím nesděluje, zda byl přístup pro čtení udělen. Prázdný přehled tedy znamená buď „v tomto období nejsou data“, nebo „přístup není povolený“ — pravdu ukáže aplikace Zdraví v části <strong>Sdílení → Aplikace → StatsWorkout</strong>.</p>
   </div>
 
+  <h2>Všechna data vs Aktivity</h2>
+  <p>Přepínač pod volbou období mění, odkud čísla pocházejí:</p>
+  <ul>
+    <li><strong>Všechna data</strong> — vše, co Apple Health sleduje průběžně: kroky za celý den, vzdálenost chůze a běhu, kola a plavání a převýšení odhadnuté ze zdolaných pater. Tréninky jsou v součtu zahrnuté, protože je Health počítá také.</li>
+    <li><strong>Aktivity</strong> — jen to, co bylo zaznamenáno uvnitř tréninku: kroky během tréninku, vzdálenost tréninku a jeho zaznamenané převýšení.</li>
+  </ul>
+  <p>Čas cvičení a počet aktivit vždy pocházejí z tréninků — Health pro ně průběžný ekvivalent nemá. Převýšení v pohledu Všechna data je větší z průběžného převýšení (zdolaná patra × 3 m) a převýšení zaznamenaného tréninkem, aby se túra neztratila, když Health měřil jen schody.</p>
+
   <h2>Co čísla znamenají</h2>
   <div class="table">
     <table>
-      <thead><tr><th>Metrika</th><th>Zdroj v Apple Health</th></tr></thead>
+      <thead><tr><th>Metrika</th><th>Všechna data</th><th>Aktivity</th></tr></thead>
       <tbody>
-        <tr><td>Kroky</td><td>Kroky za celý den v daném období, ne jen z tréninků</td></tr>
-        <tr><td>Vzdálenost</td><td>Vzdálenost zaznamenaná tréninky: chůze a běh, kolo, plavání</td></tr>
-        <tr><td>Převýšení</td><td>Nastoupané převýšení z tréninků, pokud ho aplikace zaznamenala</td></tr>
-        <tr><td>Cvičení</td><td>Celková délka tréninků</td></tr>
-        <tr><td>Aktivity</td><td>Počet tréninků</td></tr>
+        <tr><td>Kroky</td><td>Kroky za celý den</td><td>Kroky zaznamenané při trénincích</td></tr>
+        <tr><td>Vzdálenost</td><td>Průběžná vzdálenost chůze a běhu, kola a plavání</td><td>Vzdálenost zaznamenaná tréninky</td></tr>
+        <tr><td>Převýšení</td><td>Zdolaná patra v metrech, nebo převýšení tréninku, pokud je větší</td><td>Převýšení zaznamenané tréninky</td></tr>
+        <tr><td>Cvičení</td><td>Celková délka tréninků</td><td>Celková délka tréninků</td></tr>
+        <tr><td>Aktivity</td><td>Počet tréninků</td><td>Počet tréninků</td></tr>
       </tbody>
     </table>
   </div>
-  <p>Počítají se tréninky běh, chůze, kolo, turistika, plavání, silový trénink, jóga a vše ostatní jako obecný trénink. Vzdálenost a převýšení pocházejí jen z tréninků — cesta do obchodu přidá kroky, ne kilometry.</p>
+  <p>Počítají se tréninky běh, chůze, kolo, turistika, plavání, silový trénink, jóga a vše ostatní jako obecný trénink.</p>
 
   <h2>Období a srovnávání</h2>
   <p>Vyberte <strong>24 h</strong> (posuvné okno končící aktuální hodinou), <strong>Den</strong>, <strong>Týden</strong>, <strong>Měsíc</strong>, <strong>Čtvrtletí</strong>, <strong>Rok</strong> nebo <strong>Vlastní</strong>. Šipkami u názvu se posunete o jedno období zpět či vpřed, tlačítkem <strong>Dnes</strong> se vrátíte.</p>
