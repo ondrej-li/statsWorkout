@@ -78,10 +78,8 @@ struct StatsAggregator: Sendable {
             totals[index].add(activity)
         }
 
-        for sample in steps where sample.count > 0 {
-            let dayEnd = periodCalendar.calendar.date(byAdding: .day, value: 1, to: sample.day) ?? sample.day
-            guard dayEnd > range.start, sample.day < range.end else { continue }
-            let reference = max(sample.day, range.start)
+        for sample in steps where sample.count > 0 && sample.end > range.start && sample.start < range.end {
+            let reference = max(sample.start, range.start)
             guard let index = periodCalendar.bucketIndex(containing: reference, in: buckets) else { continue }
             totals[index].steps += sample.count
         }

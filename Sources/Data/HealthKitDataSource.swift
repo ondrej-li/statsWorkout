@@ -67,22 +67,33 @@ struct HealthKitDataSource: HealthDataProviding {
         }
     }
 
-    func dailySteps(in interval: DateInterval) async throws -> [StepSample] {
+    func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample] {
         guard isAvailable else { throw HealthDataError.unavailable }
         guard interval.duration > 0 else { return [] }
 
         let calendar = Calendar.current
-        let anchor = calendar.startOfDay(for: interval.start)
         let predicate = HKQuery.predicateForSamples(
             withStart: interval.start,
             end: interval.end,
             options: [.strictStartDate]
         )
+
+        let components: DateComponents
+        let anchor: Date
+        switch granularity {
+        case .hour:
+            components = DateComponents(hour: 1)
+            anchor = calendar.dateInterval(of: .hour, for: interval.start)?.start ?? interval.start
+        case .day:
+            components = DateComponents(day: 1)
+            anchor = calendar.startOfDay(for: interval.start)
+        }
+
         let descriptor = HKStatisticsCollectionQueryDescriptor(
             predicate: .quantitySample(type: HKQuantityType(.stepCount), predicate: predicate),
             options: .cumulativeSum,
             anchorDate: anchor,
-            intervalComponents: DateComponents(day: 1)
+            intervalComponents: components
         )
 
         do {
@@ -91,7 +102,9 @@ struct HealthKitDataSource: HealthDataProviding {
             collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
                 let count = statistics.sumQuantity()?.doubleValue(for: .count()) ?? 0
                 guard count > 0 else { return }
-                samples.append(StepSample(day: statistics.startDate, count: count))
+                samples.append(
+                    StepSample(start: statistics.startDate, end: statistics.endDate, count: count)
+                )
             }
             return samples
         } catch {

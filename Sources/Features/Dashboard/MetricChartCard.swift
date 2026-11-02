@@ -217,17 +217,16 @@ struct MetricChartCard: View {
 
     private var granularityTitle: String {
         switch stats.granularity {
-        case .day: return stats.range.kind == .week ? "day" : "day"
+        case .hour: return "hour"
+        case .day: return "day"
         case .week: return "week"
         case .month: return "month"
         }
     }
 
     private var unitCaption: String {
-        if let symbol = formatter.unitSymbol(for: metric) {
-            return "\(metric.subtitle) · \(symbol)"
-        }
-        return metric.subtitle
+        let average = formatter.tileString(stats.average(of: metric), for: metric)
+        return "Average \(average) per \(granularityTitle)"
     }
 
     private func plotValue(_ item: BucketStats) -> Double {

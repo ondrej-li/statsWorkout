@@ -2,6 +2,8 @@ import Foundation
 
 /// Time windows a user can summarise statistics over.
 enum PeriodKind: String, CaseIterable, Identifiable, Codable, Sendable {
+    case last24Hours
+    case day
     case week
     case month
     case quarter
@@ -12,6 +14,8 @@ enum PeriodKind: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
+        case .last24Hours: return "24h"
+        case .day: return "Day"
         case .week: return "Week"
         case .month: return "Month"
         case .quarter: return "Quarter"
@@ -26,6 +30,7 @@ enum PeriodKind: String, CaseIterable, Identifiable, Codable, Sendable {
 
 /// Resolution of the bars/points drawn for a period.
 enum BucketGranularity: String, Sendable, Hashable, CaseIterable {
+    case hour
     case day
     case week
     case month

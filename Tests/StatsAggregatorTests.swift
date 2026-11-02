@@ -27,7 +27,8 @@ struct StatsAggregatorTests {
     }
 
     private func steps(_ day: Int, _ count: Double) -> StepSample {
-        StepSample(day: TestSupport.date(calendar, 2026, 11, day), count: count)
+        let start = TestSupport.date(calendar, 2026, 11, day)
+        return StepSample(start: start, end: start.addingTimeInterval(86_400), count: count)
     }
 
     @Test("Totals sum workouts and all-day steps")
@@ -131,6 +132,24 @@ struct StatsAggregatorTests {
         #expect(previous.allSatisfy { $0 == 0 })
     }
 
+    @Test("Hourly step samples land in the matching hour bucket")
+    func hourlyStepBuckets() {
+        let range = period.range(for: .day, containing: TestSupport.date(calendar, 2026, 11, 4, 12))
+        let hour = TestSupport.date(calendar, 2026, 11, 4, 9)
+        let sample = StepSample(start: hour, end: hour.addingTimeInterval(3_600), count: 700)
+
+        let stats = aggregator.stats(
+            for: range,
+            activities: [],
+            steps: [sample],
+            now: TestSupport.date(calendar, 2026, 11, 4, 13)
+        )
+
+        #expect(stats.buckets.count == 24)
+        #expect(stats.buckets[9].totals.steps == 700)
+        #expect(stats.totals.steps == 700)
+    }
+
     @Test("Samples outside the range are ignored")
     func ignoresOutOfRangeSamples() {
         let range = period.range(for: .month, containing: TestSupport.date(calendar, 2026, 11, 15))
@@ -139,7 +158,12 @@ struct StatsAggregatorTests {
             start: TestSupport.date(calendar, 2026, 10, 20, 9),
             end: TestSupport.date(calendar, 2026, 10, 20, 10)
         )
-        let octoberSteps = StepSample(day: TestSupport.date(calendar, 2026, 10, 20), count: 7_000)
+        let octoberDay = TestSupport.date(calendar, 2026, 10, 20)
+        let octoberSteps = StepSample(
+            start: octoberDay,
+            end: octoberDay.addingTimeInterval(86_400),
+            count: 7_000
+        )
 
         let stats = aggregator.stats(
             for: range,

@@ -12,6 +12,10 @@ struct PeriodFormatter: Sendable {
 
     func rangeTitle(for range: PeriodRange) -> String {
         switch range.kind {
+        case .last24Hours:
+            return "Last 24 hours"
+        case .day:
+            return text(range.start, .dateTime.weekday(.wide).day().month(.abbreviated))
         case .week:
             return spanTitle(from: range.start, to: range.end)
         case .month:
@@ -42,6 +46,8 @@ struct PeriodFormatter: Sendable {
 
     func bucketAxisLabel(for bucket: Bucket, in stats: PeriodStats) -> String {
         switch stats.granularity {
+        case .hour:
+            return text(bucket.start, .dateTime.hour())
         case .day:
             if stats.range.kind == .week {
                 return text(bucket.start, .dateTime.weekday(.abbreviated))
@@ -56,6 +62,10 @@ struct PeriodFormatter: Sendable {
 
     func bucketTitle(for bucket: Bucket, in stats: PeriodStats) -> String {
         switch stats.granularity {
+        case .hour:
+            let from = text(bucket.start, .dateTime.hour().minute())
+            let to = text(bucket.end, .dateTime.hour().minute())
+            return "\(from) – \(to)"
         case .day:
             return text(bucket.start, .dateTime.weekday(.abbreviated).day().month(.abbreviated))
         case .week:
@@ -68,6 +78,8 @@ struct PeriodFormatter: Sendable {
     /// Compact bucket label for summary captions, e.g. `1 Nov` or `Nov`.
     func shortBucketTitle(for bucket: Bucket, in stats: PeriodStats) -> String {
         switch stats.granularity {
+        case .hour:
+            return text(bucket.start, .dateTime.hour().minute())
         case .day:
             return text(bucket.start, .dateTime.day().month(.abbreviated))
         case .week:
@@ -81,12 +93,24 @@ struct PeriodFormatter: Sendable {
     func progressCaption(for stats: PeriodStats) -> String {
         guard stats.isCurrentPeriod else { return "Complete" }
         switch stats.granularity {
+        case .hour:
+            return "Hour \(stats.elapsedBucketCount) of \(stats.buckets.count)"
         case .day:
             return "Day \(stats.elapsedBucketCount) of \(stats.buckets.count)"
         case .week:
             return "Week \(stats.elapsedBucketCount) of \(stats.buckets.count)"
         case .month:
             return "Month \(stats.elapsedBucketCount) of \(stats.buckets.count)"
+        }
+    }
+
+    /// Noun for one bucket, e.g. "hour", used in labels like "Average per hour".
+    func bucketNoun(for stats: PeriodStats) -> String {
+        switch stats.granularity {
+        case .hour: return "hour"
+        case .day: return "day"
+        case .week: return "week"
+        case .month: return "month"
         }
     }
 

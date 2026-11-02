@@ -165,7 +165,10 @@ struct DashboardView: View {
                 Divider().opacity(0.5)
 
                 HStack(spacing: 0) {
-                    heroStat("Average", formatter.tileString(stats.average(of: metric), for: metric))
+                    heroStat(
+                        "Average/\(model.periodFormatter.bucketNoun(for: stats))",
+                        formatter.tileString(stats.average(of: metric), for: metric)
+                    )
                     heroStat("Activities", "\(stats.totals.activityCount)")
                     heroStat("Best", bestBucketCaption(stats))
                 }

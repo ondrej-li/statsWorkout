@@ -143,8 +143,11 @@ final class DashboardViewModel {
                 end: max(request.range.end, comparisonRange.end)
             )
 
+            let stepGranularity: StepGranularity = environment.periodCalendar.granularity(for: request.range) == .hour
+                ? .hour
+                : .day
             async let activitiesTask = source.activities(in: window)
-            async let stepsTask = source.dailySteps(in: window)
+            async let stepsTask = source.stepSamples(in: window, granularity: stepGranularity)
             let (activities, steps) = try await (activitiesTask, stepsTask)
 
             guard generation == loadGeneration else { return }
