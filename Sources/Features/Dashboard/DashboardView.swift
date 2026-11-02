@@ -358,7 +358,10 @@ struct CustomRangeSheet: View {
     }
 }
 
+#if DEBUG
 #Preview {
     DashboardView(environment: AppEnvironment.preview())
         .environment(AppEnvironment.preview())
 }
+
+#endif

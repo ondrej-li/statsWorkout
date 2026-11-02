@@ -143,7 +143,10 @@ struct ActivityDetailView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     ActivityLogView()
         .environment(AppEnvironment.preview())
 }
+
+#endif

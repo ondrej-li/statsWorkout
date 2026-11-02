@@ -120,7 +120,10 @@ private extension Bundle {
     }
 }
 
+#if DEBUG
 #Preview {
     SettingsView()
         .environment(AppEnvironment.preview())
 }
+
+#endif

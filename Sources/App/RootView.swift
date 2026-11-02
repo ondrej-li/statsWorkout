@@ -18,7 +18,10 @@ struct RootView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     RootView()
         .environment(AppEnvironment.preview())
 }
+
+#endif
