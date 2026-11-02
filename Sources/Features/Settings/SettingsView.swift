@@ -47,7 +47,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    LabeledContent("Apple Health") {
+                    LabeledContent("Status") {
                         Text(environment.healthKit.isAvailable ? "Available" : "Unavailable")
                             .foregroundStyle(environment.healthKit.isAvailable ? .green : .secondary)
                     }

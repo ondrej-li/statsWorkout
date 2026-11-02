@@ -10,6 +10,10 @@ press-and-drag value inspection.
 > **Status:** skeleton. The data pipeline, charts, settings and mock data source are functional;
 > widgets, goals and background delivery are not implemented yet.
 
+<p align="center">
+  <img src="docs/dashboard.png" alt="StatsWorkout dashboard showing November totals, metric tiles and a steps chart" width="320">
+</p>
+
 ## Features
 
 - **Periods** — calendar week, month (default), quarter, year and custom ranges, with back/forward
