@@ -143,8 +143,8 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 ## Publishing to TestFlight
 
 ```bash
-make testflight            # build number defaults to a timestamp
-make testflight 42         # or pass an explicit build number
+make testflight                    # build number defaults to a timestamp
+make testflight BUILD_NUMBER=42    # or pass an explicit build number
 ```
 
 The script archives in Release, signs with automatic provisioning for team

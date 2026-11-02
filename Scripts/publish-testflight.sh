@@ -15,7 +15,7 @@
 set -euo pipefail
 
 TEAM_ID="${TEAM_ID:-B592D69P29}"
-BUILD_NUMBER="${1:-$(date +%Y%m%d%H%M)}"
+BUILD_NUMBER="${BUILD_NUMBER:-${1:-$(date +%Y%m%d%H%M)}}"
 BUNDLE_ID="com.defik74.statsWorkout"
 
 PROJECT="StatsWorkout.xcodeproj"
@@ -34,7 +34,7 @@ fi
 echo "==> Generating project"
 xcodegen generate
 
-echo "==> Archiving $BUNDLE_ID version $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Supporting/Info.plist 2>/dev/null || echo '?') build $BUILD_NUMBER"
+echo "==> Archiving $BUNDLE_ID build $BUILD_NUMBER"
 rm -rf "$ARCHIVE" "$EXPORT_DIR"
 mkdir -p build
 
@@ -47,7 +47,9 @@ xcodebuild archive \
     -allowProvisioningUpdates \
     CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
 
-echo "==> Exporting and uploading to App Store Connect"
+VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+    "$ARCHIVE/Products/Applications/StatsWorkout.app/Info.plist" 2>/dev/null || echo "?")
+echo "==> Exporting and uploading $BUNDLE_ID $VERSION ($BUILD_NUMBER) to App Store Connect"
 cat > "$EXPORT_OPTIONS" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

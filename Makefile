@@ -3,6 +3,7 @@ SHELL := /bin/bash
 XCODE_DEVELOPER_DIR ?= /Applications/Xcode.app/Contents/Developer
 SIMULATOR ?= iPhone 17
 TEAM_ID ?= B592D69P29
+BUILD_NUMBER ?=
 PROJECT := StatsWorkout.xcodeproj
 SCHEME := StatsWorkout
 
@@ -39,7 +40,7 @@ select-xcode:
 	sudo xcode-select -s $(XCODE_DEVELOPER_DIR)
 
 testflight:
-	TEAM_ID=$(TEAM_ID) ./Scripts/publish-testflight.sh
+	TEAM_ID=$(TEAM_ID) BUILD_NUMBER=$(BUILD_NUMBER) ./Scripts/publish-testflight.sh
 
 clean:
 	rm -rf build DerivedData
