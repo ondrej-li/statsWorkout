@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Build artefacts
+build/
+DerivedData/
+*.xcresult
+*.xcarchive
+
+# Xcode user state
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+.swiftpm/
+
+# Fastlane / tooling
+fastlane/report.xml
+fastlane/screenshots/**/*.png
+
+# Environment
+*.env
+.env.local
