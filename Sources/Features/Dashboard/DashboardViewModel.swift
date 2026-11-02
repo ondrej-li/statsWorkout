@@ -7,6 +7,7 @@ final class DashboardViewModel {
     enum Phase: Equatable {
         case loading
         case loaded
+        case needsAuthorization
         case failed(String)
     }
 
@@ -131,6 +132,11 @@ final class DashboardViewModel {
 
         do {
             let source: any HealthDataProviding = request.useMockData ? environment.mock : environment.healthKit
+
+            if !request.useMockData {
+                await requestAuthorizationIfNeeded()
+            }
+
             let comparisonRange = environment.periodCalendar.comparisonRange(for: request.range, mode: request.comparison)
             let window = DateInterval(
                 start: min(request.range.start, comparisonRange.start),
@@ -158,10 +164,27 @@ final class DashboardViewModel {
             phase = .loaded
         } catch is CancellationError {
             return
+        } catch let error as HealthDataError where error.isAuthorizationNotDetermined {
+            guard generation == loadGeneration else { return }
+            phase = .needsAuthorization
         } catch {
             guard generation == loadGeneration else { return }
             phase = .failed(error.localizedDescription)
         }
+    }
+
+    /// Shows the system Health permission sheet the first time the dashboard loads
+    /// with real data. HealthKit returns `shouldRequest` only until the user has
+    /// been asked, so this never nags.
+    private func requestAuthorizationIfNeeded() async {
+        guard environment.healthKit.isAvailable, !isRequestingAuthorization else { return }
+
+        let status = try? await environment.healthKit.authorizationRequestStatus()
+        guard status == .shouldRequest else { return }
+
+        isRequestingAuthorization = true
+        defer { isRequestingAuthorization = false }
+        try? await environment.healthKit.requestAuthorization()
     }
 
     func requestHealthAccess() async {

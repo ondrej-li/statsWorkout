@@ -89,6 +89,8 @@ struct DashboardView: View {
         switch model.phase {
         case .failed(let message):
             errorCard(message)
+        case .needsAuthorization:
+            permissionCard
         default:
             if let stats = model.stats {
                 heroCard(stats)

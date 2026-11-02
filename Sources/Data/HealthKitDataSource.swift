@@ -28,6 +28,18 @@ struct HealthKitDataSource: HealthDataProviding {
         ]
     }
 
+    func authorizationRequestStatus() async throws -> HealthAuthorizationStatus {
+        guard isAvailable else { throw HealthDataError.unavailable }
+
+        let status = try await store.statusForAuthorizationRequest(toShare: [], read: Self.readTypes)
+        switch status {
+        case .shouldRequest: return .shouldRequest
+        case .unnecessary: return .unnecessary
+        case .unknown: return .unknown
+        @unknown default: return .unknown
+        }
+    }
+
     func requestAuthorization() async throws {
         guard isAvailable else { throw HealthDataError.unavailable }
         try await store.requestAuthorization(toShare: [], read: Self.readTypes)
@@ -51,7 +63,7 @@ struct HealthKitDataSource: HealthDataProviding {
             let workouts = try await descriptor.result(for: store)
             return workouts.map(WorkoutMapper.activity(from:))
         } catch {
-            throw HealthDataError.queryFailed(error.localizedDescription)
+            throw Self.map(error)
         }
     }
 
@@ -83,7 +95,14 @@ struct HealthKitDataSource: HealthDataProviding {
             }
             return samples
         } catch {
-            throw HealthDataError.queryFailed(error.localizedDescription)
+            throw Self.map(error)
         }
+    }
+
+    private static func map(_ error: Error) -> HealthDataError {
+        if let healthError = error as? HKError, healthError.code == .errorAuthorizationNotDetermined {
+            return .authorizationNotDetermined
+        }
+        return .queryFailed(error.localizedDescription)
     }
 }

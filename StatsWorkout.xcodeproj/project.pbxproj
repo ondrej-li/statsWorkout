@@ -24,6 +24,7 @@
 		66E49E5DBBE60BB10554D7C4 /* StatsWorkoutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CCB44683D9520467D260FC /* StatsWorkoutApp.swift */; };
 		6DC08C8F5DA6D22427AB0D12 /* WorkoutMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8106FD1BF171FF5DAB2755D2 /* WorkoutMapper.swift */; };
 		7DD66823D5102DEECA4C75E9 /* PeriodKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB560F079F19CAEB0A679F6 /* PeriodKind.swift */; };
+		811E2C41890823B78B02473E /* MockHealthDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBF5B431DC154B93F68153D /* MockHealthDataTests.swift */; };
 		8A992BE3B63152A2B8F4B1EB /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF9D06985F5A51A895C84DD /* TestSupport.swift */; };
 		934044C5DFD9B87E8AD2F3C7 /* MetricTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 253C6DEAB7146E390085F04F /* MetricTileView.swift */; };
 		93C984873FED435B4787C5D8 /* ActivityRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A9397C1610A53C63B16E16 /* ActivityRow.swift */; };
@@ -66,6 +67,7 @@
 		3B5B7FB76DB8385ECD1A7C4A /* HealthKitDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitDataSource.swift; sourceTree = "<group>"; };
 		3F920BC2ABC48E7083ED6DAE /* StatsAggregator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsAggregator.swift; sourceTree = "<group>"; };
 		4FB690E6A633A00A71DA461B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		5BBF5B431DC154B93F68153D /* MockHealthDataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockHealthDataTests.swift; sourceTree = "<group>"; };
 		643DB4D93822B103D10F9B01 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6D53C1279433506B53C90C0F /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		8106FD1BF171FF5DAB2755D2 /* WorkoutMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMapper.swift; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 			isa = PBXGroup;
 			children = (
 				2E3E14D99951CB9406B551F7 /* MetricFormatterTests.swift */,
+				5BBF5B431DC154B93F68153D /* MockHealthDataTests.swift */,
 				98CF8004C7C717029AC1DE0F /* PeriodCalendarTests.swift */,
 				F071001F1EFA1CA0C2B71872 /* StatsAggregatorTests.swift */,
 				FDF9D06985F5A51A895C84DD /* TestSupport.swift */,
@@ -339,6 +342,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				40BC1112C6FB0A43A066C6C2 /* MetricFormatterTests.swift in Sources */,
+				811E2C41890823B78B02473E /* MockHealthDataTests.swift in Sources */,
 				0E6747E50E27A85398E5DD09 /* PeriodCalendarTests.swift in Sources */,
 				45BF3254C9E7F2AB942A88D7 /* StatsAggregatorTests.swift in Sources */,
 				8A992BE3B63152A2B8F4B1EB /* TestSupport.swift in Sources */,
