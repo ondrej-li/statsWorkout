@@ -11,19 +11,31 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 14) {
-                    rangeHeader
-                    PeriodPickerBar(selection: model.periodKind) { model.select($0) }
-                    scopePicker
-                    content
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 14) {
+                        rangeHeader
+                            .id("top")
+                        PeriodPickerBar(selection: model.periodKind) { model.select($0) }
+                        scopePicker
+                        content
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 28)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 28)
+                .task(id: ScreenshotRoute.section) {
+                    guard let section = ScreenshotRoute.section else { return }
+                    // Let the dashboard finish loading before jumping.
+                    try? await Task.sleep(for: .milliseconds(600))
+                    proxy.scrollTo(section, anchor: .top)
+                }
             }
             .scrollIndicators(.hidden)
             .background { background }
             .navigationTitle("Stats")
+            // Chart shots are taken scrolled; a compact bar reads better than a
+            // collapsed large title over the first card.
+            .navigationBarTitleDisplayMode(ScreenshotRoute.section == nil ? .large : .inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Today") {
@@ -124,6 +136,7 @@ struct DashboardView: View {
                     periodFormatter: model.periodFormatter,
                     selection: selectionBinding
                 )
+                .id("charts")
                 CumulativeChartCard(
                     stats: stats,
                     metric: model.metric,
@@ -131,7 +144,9 @@ struct DashboardView: View {
                     periodFormatter: model.periodFormatter,
                     selection: selectionBinding
                 )
+                .id("progress")
                 recentActivitiesCard(stats)
+                    .id("activities")
                 if model.showsPermissionHint || model.healthAccessUnavailable {
                     permissionCard
                 }

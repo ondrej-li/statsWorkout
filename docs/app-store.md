@@ -126,15 +126,26 @@ sample activity is generated locally on the device and clearly labelled in the U
 
 ## Screenshots
 
-Required sizes (Apple, 2026): 6.9" iPhone and 13" iPad, portrait. Capture with demo data so every
-chart is populated:
+Captured, not assembled: `make shots` writes them to [screenshots/](../screenshots)
+(1206 × 2622 iPhone, 2064 × 2752 iPad), all with a 9:41 status bar, no alpha and
+no metadata chunks.
 
-1. Dashboard, month period — hero total, metric tiles, bars.
-2. Dashboard, day period — hourly bars with a selected bar showing its value.
-3. Progress over time chart vs previous period.
-4. Activities list.
-5. Settings — units and comparison options.
-6. (Czech) Dashboard, month period.
+| Slot | File |
+| --- | --- |
+| 1 | `iphone/01-dashboard.png` — month totals, five metrics, All data / Activities switch |
+| 2 | `iphone/02-day.png` — hourly bars with a value callout + progress chart |
+| 3 | `iphone/03-progress.png` — running total against the previous period |
+| 4 | `iphone/04-activities-only.png` — workout-only numbers |
+| 5 | `iphone/05-activity-log.png` — workouts by day |
+| 6 | `iphone/06-settings.png` — units and defaults |
+
+iPad: `ipad/01-dashboard.png`, `02-day.png`, `03-progress.png`, `04-activity-log.png`.
+
+## App icon
+
+Five candidates with a recommendation are in [icons/](icons/README.md). The
+shipped icon must be 1024 × 1024 and opaque; the current `AppIcon.png` is a
+placeholder.
 
 ## Localisation
 

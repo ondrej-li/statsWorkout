@@ -90,6 +90,19 @@ enum MockHealthData {
             day = next
         }
 
+        // The demo always shows something recent: if today rolled no workout,
+        // add one a few hours before now.
+        let today = calendar.startOfDay(for: now)
+        if !result.contains(where: { calendar.isDate($0.start, inSameDayAs: today) }) {
+            let localSeed = seed &+ UInt64(dayIndex(for: today, calendar: calendar)) &* 5_003 &+ 77
+            var activity = makeActivity(localSeed: localSeed, day: today, calendar: calendar)
+            activity = clamped(activity, endingBefore: now, calendar: calendar)
+            if activity.end > interval.start, activity.start < limit,
+               activity.start >= calendar.startOfDay(for: interval.start) {
+                result.append(activity)
+            }
+        }
+
         return result.filter { $0.start >= interval.start && $0.start < limit }
     }
 
@@ -346,6 +359,23 @@ enum MockHealthData {
 
     // MARK: - Generation
 
+    private static func clamped(_ activity: ActivitySample, endingBefore now: Date, calendar: Calendar) -> ActivitySample {
+        guard activity.end > now else { return activity }
+        let duration = min(activity.duration, 45 * 60)
+        let end = now
+        let start = max(calendar.startOfDay(for: now), end.addingTimeInterval(-duration))
+        return ActivitySample(
+            id: activity.id,
+            kind: activity.kind,
+            start: start,
+            end: end,
+            distanceMeters: activity.distanceMeters.map { $0 * (end.timeIntervalSince(start) / max(activity.duration, 1)) },
+            elevationGainMeters: activity.elevationGainMeters,
+            stepCount: activity.stepCount.map { $0 * (end.timeIntervalSince(start) / max(activity.duration, 1)) },
+            activeEnergyKilocalories: activity.activeEnergyKilocalories
+        )
+    }
+
     private static func makeActivity(localSeed: UInt64, day: Date, calendar: Calendar) -> ActivitySample {
         let kindRoll = unitRandom(localSeed, 1)
         let kind: ActivityKind
@@ -362,16 +392,16 @@ enum MockHealthData {
         let hour = 6 + Int(unitRandom(localSeed, 2) * 11)
         let minute = Int(unitRandom(localSeed, 3) * 60)
         let start = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day) ?? day
-        let durationMinutes = 20 + unitRandom(localSeed, 4) * 70
+        let durationMinutes = 22 + unitRandom(localSeed, 4) * 58
         let end = start.addingTimeInterval(durationMinutes * 60)
 
         let distanceMeters: Double? = {
             guard kind.isDistanceBased else { return nil }
             let speedKmh: Double
             switch kind {
-            case .running: speedKmh = 9.5 + unitRandom(localSeed, 5) * 4.5
+            case .running: speedKmh = 8.8 + unitRandom(localSeed, 5) * 3.4
             case .walking: speedKmh = 4.2 + unitRandom(localSeed, 5) * 1.6
-            case .cycling: speedKmh = 19 + unitRandom(localSeed, 5) * 12
+            case .cycling: speedKmh = 18 + unitRandom(localSeed, 5) * 9
             case .hiking: speedKmh = 3.4 + unitRandom(localSeed, 5) * 1.8
             case .swimming: speedKmh = 1.6 + unitRandom(localSeed, 5) * 0.9
             default: speedKmh = 0

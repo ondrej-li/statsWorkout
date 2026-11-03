@@ -19,7 +19,7 @@ final class DashboardViewModel {
 
     var periodKind: PeriodKind
     var range: PeriodRange
-    var metric: Metric = .steps
+    var metric: Metric = ScreenshotRoute.metric ?? .steps
     var selectedBucketIndex: Int?
     var phase: Phase = .loading
     var aggregated: AggregatedStats?
@@ -43,8 +43,11 @@ final class DashboardViewModel {
     init(environment: AppEnvironment) {
         self.environment = environment
         let now = environment.now()
-        let kind = environment.settings.preferredPeriod
-        let range = environment.periodCalendar.range(for: kind, containing: now)
+        let kind = ScreenshotRoute.period ?? environment.settings.preferredPeriod
+        var range = environment.periodCalendar.range(for: kind, containing: now)
+        if ScreenshotRoute.periodOffset != 0 {
+            range = environment.periodCalendar.offset(range, by: ScreenshotRoute.periodOffset)
+        }
         self.periodKind = kind
         self.range = range
         self.customStart = range.start
@@ -205,6 +208,18 @@ final class DashboardViewModel {
             )
 
             self.aggregated = aggregated
+
+            if let selection = ScreenshotRoute.selection, ScreenshotRoute.isActive {
+                let stats = aggregated.stats(for: dataScope)
+                switch selection {
+                case .peak:
+                    self.selectedBucketIndex = stats.buckets
+                        .max { $0.totals.value(for: metric) < $1.totals.value(for: metric) }?
+                        .bucket.index
+                case .index(let index):
+                    self.selectedBucketIndex = min(max(0, index), max(0, stats.buckets.count - 1))
+                }
+            }
             self.recentActivities = activities
                 .filter { request.range.contains($0.start) }
                 .sorted { $0.start > $1.start }
