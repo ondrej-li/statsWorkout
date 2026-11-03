@@ -1,5 +1,9 @@
 # App icon candidates
 
+> **Chosen: 2 (`02-pulse-trend`)** — applied as
+> `Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png` and as the icon on
+> the website. The other directions are kept for reference.
+
 Five directions, each combining a rising chart with a health signal. Rendered by
 [tools/generate-icon-concepts.swift](../../tools/generate-icon-concepts.swift) at
 1024 × 1024, opaque, square (Apple applies the mask).

@@ -7,6 +7,8 @@
 
 import AppKit
 import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 
 let size: CGFloat = 1024
 let outDir = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "docs/icons"
@@ -238,22 +240,47 @@ func icon5(_ palette: Palette) {
 
 // MARK: - Rendering
 
-/// Draws one icon into an exact 1024x1024 opaque bitmap. `lockFocus` would
-/// render at the screen's backing scale, which on a Retina Mac produces a 2048px
-/// file that App Store Connect refuses.
-func render(_ draw: () -> Void) -> NSBitmapImageRep? {
-    let side = Int(size)
-    guard let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: side, pixelsHigh: side,
-        bitsPerSample: 8, samplesPerPixel: 3, hasAlpha: false, isPlanar: false,
-        colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
-    ) else { return nil }
+/// Draws one icon into an exact 1024x1024 opaque bitmap.
+///
+/// A CoreGraphics context is used rather than an `NSImage`: `lockFocus` renders
+/// at the screen's backing scale (2048 px on a Retina Mac, which App Store
+/// Connect refuses), and `NSBitmapImageRep` construction silently fails for a
+/// three-channel configuration.
+func render(_ draw: () -> Void) -> CGImage? {
+    guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+          let context = CGContext(
+            data: nil,
+            width: Int(size),
+            height: Int(size),
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: space,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+          ) else { return nil }
 
+    let graphics = NSGraphicsContext(cgContext: context, flipped: false)
     NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    NSGraphicsContext.current = graphics
     draw()
+    graphics.flushGraphics()
     NSGraphicsContext.restoreGraphicsState()
-    return rep
+
+    return context.makeImage()
+}
+
+/// True when the bitmap holds more than one colour, i.e. the drawing landed.
+func hasContent(_ image: CGImage) -> Bool {
+    guard let data = image.dataProvider?.data, let bytes = CFDataGetBytePtr(data) else { return false }
+    func pixel(_ x: Int, _ y: Int) -> [UInt8] {
+        let offset = y * image.bytesPerRow + x * 4
+        return [bytes[offset], bytes[offset + 1], bytes[offset + 2]]
+    }
+    let samples = [pixel(8, 8), pixel(image.width / 2, image.height / 2),
+                   pixel(image.width - 9, image.height - 9)]
+    guard let first = samples.first else { return false }
+    return samples.contains { sample in
+        zip(sample, first).contains { abs(Int($0) - Int($1)) > 6 }
+    }
 }
 
 // MARK: - Run
@@ -270,17 +297,29 @@ try? FileManager.default.createDirectory(atPath: outDir, withIntermediateDirecto
 
 var rendered: [(String, NSImage)] = []
 for (index, concept) in concepts.enumerated() {
-    guard let rep = render({ concept.1(palettes[index]) }),
-          let png = rep.representation(using: .png, properties: [:]) else { continue }
-    try png.write(to: URL(fileURLWithPath: "\(outDir)/\(concept.0).png"))
-    print("wrote \(outDir)/\(concept.0).png")
+    guard let image = render({ concept.1(palettes[index]) }) else {
+        FileHandle.standardError.write(Data("error: \(concept.0) failed to render\n".utf8))
+        exit(1)
+    }
+    guard hasContent(image) else {
+        FileHandle.standardError.write(Data("error: \(concept.0) rendered blank\n".utf8))
+        exit(1)
+    }
 
-    // The contact sheet is drawn from an NSImage of the same artwork.
-    let preview = NSImage(size: NSSize(width: size, height: size))
-    preview.lockFocus()
-    concept.1(palettes[index])
-    preview.unlockFocus()
-    rendered.append((concept.0, preview))
+    let url = URL(fileURLWithPath: "\(outDir)/\(concept.0).png")
+    guard let destination = CGImageDestinationCreateWithURL(
+        url as CFURL, UTType.png.identifier as CFString, 1, nil
+    ) else {
+        FileHandle.standardError.write(Data("error: cannot write \(url.path)\n".utf8))
+        exit(1)
+    }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+        FileHandle.standardError.write(Data("error: cannot finalise \(url.path)\n".utf8))
+        exit(1)
+    }
+    print("wrote \(url.path)")
+    rendered.append((concept.0, NSImage(cgImage: image, size: NSSize(width: size, height: size))))
 }
 
 // Contact sheet: 5 icons in a row, labelled.
