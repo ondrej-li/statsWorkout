@@ -33,6 +33,22 @@ struct MockHealthDataSource: HealthDataProviding {
     func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
         MockHealthData.elevationSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
     }
+
+    func workoutQuantitySamples(
+        in interval: DateInterval,
+        kind: ContinuousQuantity,
+        within windows: [DateInterval],
+        granularity: StepGranularity
+    ) async throws -> [QuantitySample] {
+        MockHealthData.workoutQuantitySamples(
+            in: interval,
+            kind: kind,
+            within: windows,
+            granularity: granularity,
+            calendar: calendar,
+            seed: seed
+        )
+    }
 }
 
 enum MockHealthData {
@@ -77,7 +93,7 @@ enum MockHealthData {
         return result.filter { $0.start >= interval.start && $0.start < limit }
     }
 
-    // MARK: - Steps
+    // MARK: - Steps and distance
 
     static func stepSamples(
         in interval: DateInterval,
@@ -102,21 +118,17 @@ enum MockHealthData {
     ) -> [StepSample] {
         guard interval.duration > 0 else { return [] }
 
-        var result: [StepSample] = []
-        var day = calendar.startOfDay(for: interval.start)
-        let limit = min(interval.end, now)
-
-        while day < limit {
-            let end = calendar.date(byAdding: .day, value: 1, to: day) ?? limit
-            let dayFraction = calendar.isDate(day, inSameDayAs: now)
-                ? max(0.05, now.timeIntervalSince(day) / max(end.timeIntervalSince(day), 1))
-                : 1
-            let count = dailyTotal(for: day, calendar: calendar, seed: seed) * dayFraction
-            result.append(StepSample(start: day, end: end, count: roundedToFive(count)))
-            day = end
+        var buckets: [Date: (end: Date, value: Double)] = [:]
+        for hour in hourlyBreakdown(in: interval, calendar: calendar, seed: seed, now: now) {
+            let day = calendar.startOfDay(for: hour.start)
+            let end = calendar.date(byAdding: .day, value: 1, to: day) ?? hour.end
+            buckets[day] = (end, (buckets[day]?.value ?? 0) + hour.steps)
         }
 
-        return result.filter { $0.end > interval.start && $0.start < limit }
+        return buckets
+            .sorted { $0.key < $1.key }
+            .map { StepSample(start: $0.key, end: $0.value.end, count: roundedToFive($0.value.value)) }
+            .filter { $0.count > 0 }
     }
 
     static func hourlySteps(
@@ -125,33 +137,10 @@ enum MockHealthData {
         seed: UInt64,
         now: Date = Date()
     ) -> [StepSample] {
-        guard interval.duration > 0 else { return [] }
-
-        let limit = min(interval.end, now)
-        var cursor = calendar.dateInterval(of: .hour, for: interval.start)?.start ?? interval.start
-        let weightSum = hourlyWeights.reduce(0, +)
-
-        var result: [StepSample] = []
-        while cursor < limit {
-            let end = calendar.date(byAdding: .hour, value: 1, to: cursor) ?? limit
-            let day = calendar.startOfDay(for: cursor)
-            let hour = calendar.component(.hour, from: cursor)
-            var count = dailyTotal(for: day, calendar: calendar, seed: seed)
-                * hourlyWeights[hour] / weightSum
-
-            if cursor <= now, now < end {
-                let fraction = now.timeIntervalSince(cursor) / max(end.timeIntervalSince(cursor), 1)
-                count *= max(0.02, fraction)
-            }
-
-            result.append(StepSample(start: cursor, end: end, count: roundedToFive(count)))
-            cursor = end
-        }
-
-        return result.filter { $0.end > interval.start && $0.start < limit }
+        hourlyBreakdown(in: interval, calendar: calendar, seed: seed, now: now)
+            .map { StepSample(start: $0.start, end: $0.end, count: roundedToFive($0.steps)) }
+            .filter { $0.count > 0 }
     }
-
-    // MARK: - Continuous distance and elevation
 
     static func distanceSamples(
         in interval: DateInterval,
@@ -160,14 +149,67 @@ enum MockHealthData {
         seed: UInt64,
         now: Date = Date()
     ) -> [QuantitySample] {
-        let steps = stepSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed, now: now)
-        return steps.map { sample in
-            let day = calendar.startOfDay(for: sample.start)
-            let index = UInt64(dayIndex(for: day, calendar: calendar))
-            let stride = 0.72 + unitRandom(seed &+ 4_242, index) * 0.12
-            return QuantitySample(start: sample.start, end: sample.end, value: sample.count * stride)
+        guard interval.duration > 0 else { return [] }
+
+        var buckets: [Date: (end: Date, value: Double)] = [:]
+        for hour in hourlyBreakdown(in: interval, calendar: calendar, seed: seed, now: now) {
+            let start = granularity == .hour ? hour.start : calendar.startOfDay(for: hour.start)
+            let end = granularity == .hour
+                ? hour.end
+                : calendar.date(byAdding: .day, value: 1, to: start) ?? hour.end
+            buckets[start] = (end, (buckets[start]?.value ?? 0) + hour.distance)
         }
+
+        return buckets
+            .sorted { $0.key < $1.key }
+            .map { QuantitySample(start: $0.key, end: $0.value.end, value: $0.value.value.rounded()) }
+            .filter { $0.value > 0 }
     }
+
+    /// Steps and distance recorded inside the workout windows, at the requested
+    /// resolution. Mirrors HealthKit, where these are ordinary samples that fall
+    /// between the workout's start and end.
+    static func workoutQuantitySamples(
+        in interval: DateInterval,
+        kind: ContinuousQuantity,
+        within windows: [DateInterval],
+        granularity: StepGranularity,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date = Date()
+    ) -> [QuantitySample] {
+        guard interval.duration > 0, !windows.isEmpty else { return [] }
+
+        var totals: [Date: (end: Date, value: Double)] = [:]
+
+        for hour in hourlyBreakdown(in: interval, calendar: calendar, seed: seed, now: now) {
+            let overlap = windows.reduce(0.0) { partial, window in
+                let start = max(hour.start, window.start)
+                let end = min(hour.end, window.end)
+                return partial + max(0, end.timeIntervalSince(start))
+            }
+            guard overlap > 0, hour.duration > 0 else { continue }
+
+            let fraction = min(1, overlap / hour.duration)
+            let value = (kind == .steps ? hour.steps : hour.distance) * fraction
+            guard value > 0 else { continue }
+
+            let bucketStart = granularity == .hour ? hour.start : calendar.startOfDay(for: hour.start)
+            let bucketEnd = granularity == .hour
+                ? hour.end
+                : calendar.date(byAdding: .day, value: 1, to: bucketStart) ?? hour.end
+
+            let existing = totals[bucketStart]
+            totals[bucketStart] = (bucketEnd, (existing?.value ?? 0) + value)
+        }
+
+        return totals
+            .map { QuantitySample(start: $0.key, end: $0.value.end, value: $0.value.value.rounded()) }
+            .filter { $0.value > 0 }
+            .sorted { $0.start < $1.start }
+    }
+
+    // MARK: - Continuous elevation
 
     static func elevationSamples(
         in interval: DateInterval,
@@ -219,13 +261,83 @@ enum MockHealthData {
         return result
     }
 
+    // MARK: - Hourly breakdown
+
+    /// One hour of generated activity: ambient movement plus whatever a workout
+    /// contributed, so continuous totals always contain the workout figures and
+    /// never disagree with them.
+    private struct Hour {
+        let start: Date
+        let end: Date
+        var ambientSteps: Double
+        var ambientDistance: Double
+        var workoutSteps: Double
+        var workoutDistance: Double
+
+        var duration: TimeInterval { end.timeIntervalSince(start) }
+        var steps: Double { ambientSteps + workoutSteps }
+        var distance: Double { ambientDistance + workoutDistance }
+    }
+
+    private static func hourlyBreakdown(
+        in interval: DateInterval,
+        calendar: Calendar,
+        seed: UInt64,
+        now: Date
+    ) -> [Hour] {
+        guard interval.duration > 0 else { return [] }
+        let limit = min(interval.end, now)
+        let workouts = activities(in: interval, calendar: calendar, seed: seed, now: now)
+        let weightSum = hourlyWeights.reduce(0, +)
+
+        var hours: [Hour] = []
+        var cursor = calendar.dateInterval(of: .hour, for: interval.start)?.start ?? interval.start
+
+        while cursor < limit {
+            let end = calendar.date(byAdding: .hour, value: 1, to: cursor) ?? limit
+            let day = calendar.startOfDay(for: cursor)
+            let hour = calendar.component(.hour, from: cursor)
+            let elapsedFraction: Double = end <= now
+                ? 1
+                : max(0.02, now.timeIntervalSince(cursor) / max(end.timeIntervalSince(cursor), 1))
+
+            let ambient = dailyTotal(for: day, calendar: calendar, seed: seed)
+                * hourlyWeights[hour] / weightSum
+                * elapsedFraction
+
+            var entry = Hour(
+                start: cursor,
+                end: end,
+                ambientSteps: ambient,
+                ambientDistance: ambient * 0.78,
+                workoutSteps: 0,
+                workoutDistance: 0
+            )
+
+            for workout in workouts where workout.end > cursor && workout.start < end {
+                let overlapStart = max(cursor, workout.start)
+                let overlapEnd = min(end, workout.end)
+                let share = workout.duration > 0
+                    ? max(0, overlapEnd.timeIntervalSince(overlapStart)) / workout.duration
+                    : 0
+                entry.workoutSteps += (workout.stepCount ?? 0) * share
+                entry.workoutDistance += (workout.distanceMeters ?? 0) * share
+            }
+
+            hours.append(entry)
+            cursor = end
+        }
+
+        return hours
+    }
+
     private static func dailyTotal(for day: Date, calendar: Calendar, seed: UInt64) -> Double {
         let index = UInt64(dayIndex(for: day, calendar: calendar))
         let noise = unitRandom(seed &+ 999, index)
         let weekday = calendar.component(.weekday, from: day)
         let weekend = (weekday == 1 || weekday == 7) ? 1.18 : 1.0
         let seasonal = 0.9 + 0.22 * sin(Double(index) / 61.0)
-        return max(0, (5_200 + noise * 7_400) * weekend * seasonal)
+        return max(0, (4_400 + noise * 6_600) * weekend * seasonal)
     }
 
     private static func roundedToFive(_ value: Double) -> Double {

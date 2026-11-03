@@ -46,20 +46,33 @@ struct MockHealthDataTests {
         #expect(samples.allSatisfy { $0.count >= 0 })
     }
 
-    @Test("Continuous distance follows the generated steps")
-    func distanceSamples() {
+    @Test("Continuous totals always contain the workout share")
+    func continuousContainsWorkouts() {
         let now = TestSupport.date(calendar, 2026, 11, 2, 10, 0)
         let steps = MockHealthData.dailySteps(in: window, calendar: calendar, seed: 5, now: now)
         let distance = MockHealthData.distanceSamples(
             in: window, granularity: .day, calendar: calendar, seed: 5, now: now
         )
+        let activities = MockHealthData.activities(in: window, calendar: calendar, seed: 5, now: now)
+        let windows = activities.map { DateInterval(start: $0.start, end: $0.end) }
+        let workoutSteps = MockHealthData.workoutQuantitySamples(
+            in: window, kind: .steps, within: windows, granularity: .day,
+            calendar: calendar, seed: 5, now: now
+        )
+        let workoutDistance = MockHealthData.workoutQuantitySamples(
+            in: window, kind: .distance, within: windows, granularity: .day,
+            calendar: calendar, seed: 5, now: now
+        )
 
-        #expect(distance.count == steps.count)
-        for (sample, step) in zip(distance, steps) {
-            // Roughly 0.7-0.85 m per step.
-            #expect(sample.value > step.count * 0.6)
-            #expect(sample.value < step.count * 0.95)
-        }
+        #expect(!steps.isEmpty)
+        #expect(!distance.isEmpty)
+        #expect(!workoutSteps.isEmpty)
+        #expect(steps.allSatisfy { $0.count > 0 })
+        #expect(distance.allSatisfy { $0.value > 0 })
+
+        // A workout's own figures are part of the continuous totals, never on top of them.
+        #expect(workoutSteps.reduce(0) { $0 + $1.value } < steps.reduce(0) { $0 + $1.count })
+        #expect(workoutDistance.reduce(0) { $0 + $1.value } < distance.reduce(0) { $0 + $1.value })
     }
 
     @Test("Continuous elevation is derived from flights climbed")

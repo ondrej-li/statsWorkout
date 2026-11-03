@@ -21,12 +21,25 @@ enum PreviewStats {
             in: window, granularity: .day, calendar: calendar, seed: 0x5EED, now: now
         )
 
-        return StatsAggregator(periodCalendar: periodCalendar).stats(
-            for: range,
+        let windows = activities.map { DateInterval(start: $0.start, end: $0.end) }
+        let samples = HealthSamples(
             activities: activities,
             steps: steps,
             distance: distance,
             elevation: elevation,
+            workoutSteps: MockHealthData.workoutQuantitySamples(
+                in: window, kind: .steps, within: windows,
+                granularity: .day, calendar: calendar, seed: 0x5EED, now: now
+            ),
+            workoutDistance: MockHealthData.workoutQuantitySamples(
+                in: window, kind: .distance, within: windows,
+                granularity: .day, calendar: calendar, seed: 0x5EED, now: now
+            )
+        )
+
+        return StatsAggregator(periodCalendar: periodCalendar).stats(
+            for: range,
+            samples: samples,
             now: now
         ).allData
     }

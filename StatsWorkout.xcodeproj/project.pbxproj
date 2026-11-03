@@ -23,6 +23,7 @@
 		61BEE9FE283A39E589041A6D /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E62E0009ED36B7630B24A983 /* AppSettings.swift */; };
 		66E49E5DBBE60BB10554D7C4 /* StatsWorkoutApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00CCB44683D9520467D260FC /* StatsWorkoutApp.swift */; };
 		6DC08C8F5DA6D22427AB0D12 /* WorkoutMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8106FD1BF171FF5DAB2755D2 /* WorkoutMapper.swift */; };
+		7D722E276E7DA2CBCD9E96F8 /* HealthSamples.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97EB19BC7E551E09EFFE5636 /* HealthSamples.swift */; };
 		7DD66823D5102DEECA4C75E9 /* PeriodKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB560F079F19CAEB0A679F6 /* PeriodKind.swift */; };
 		811E2C41890823B78B02473E /* MockHealthDataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBF5B431DC154B93F68153D /* MockHealthDataTests.swift */; };
 		8A992BE3B63152A2B8F4B1EB /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDF9D06985F5A51A895C84DD /* TestSupport.swift */; };
@@ -80,6 +81,7 @@
 		885BC175BADE9C7E23F90ADA /* MetricChartCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChartCard.swift; sourceTree = "<group>"; };
 		8C55310202C3CD895365E4D6 /* PeriodFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodFormatter.swift; sourceTree = "<group>"; };
 		8FF9C975C00BF80ED2A1B1DE /* PreviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSupport.swift; sourceTree = "<group>"; };
+		97EB19BC7E551E09EFFE5636 /* HealthSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSamples.swift; sourceTree = "<group>"; };
 		98CF8004C7C717029AC1DE0F /* PeriodCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodCalendarTests.swift; sourceTree = "<group>"; };
 		9C8F3C7CDB50164BE220677B /* ActivitySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySample.swift; sourceTree = "<group>"; };
 		A4CF6202FDC4E7FB5D95B735 /* PeriodStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodStats.swift; sourceTree = "<group>"; };
@@ -154,6 +156,7 @@
 			children = (
 				9C8F3C7CDB50164BE220677B /* ActivitySample.swift */,
 				53C65D529022D6C734191690 /* DataScope.swift */,
+				97EB19BC7E551E09EFFE5636 /* HealthSamples.swift */,
 				240FF7A7026856831536E8B4 /* Metric.swift */,
 				2BB560F079F19CAEB0A679F6 /* PeriodKind.swift */,
 				A4CF6202FDC4E7FB5D95B735 /* PeriodStats.swift */,
@@ -371,6 +374,7 @@
 				C1C282E2364277D446177557 /* DataScope.swift in Sources */,
 				4DEAB522ED999871DDAC7F60 /* HealthDataProviding.swift in Sources */,
 				F0A285BBFB22B95F35C9BF60 /* HealthKitDataSource.swift in Sources */,
+				7D722E276E7DA2CBCD9E96F8 /* HealthSamples.swift in Sources */,
 				44E74519A6EDCF06F4B6BABE /* Metric.swift in Sources */,
 				52A181D9A1D017155B4B69BF /* MetricChartCard.swift in Sources */,
 				5A1E476AA7BEF7ABBD00307A /* MetricFormatter.swift in Sources */,

@@ -29,6 +29,12 @@ enum HealthDataError: LocalizedError, Sendable {
     }
 }
 
+/// Quantities that can be measured continuously and again inside workouts.
+enum ContinuousQuantity: Sendable, Hashable {
+    case steps
+    case distance
+}
+
 /// Resolution requested for step samples. Hourly samples back the day and
 /// 24-hour views; daily samples are enough for everything else.
 enum StepGranularity: Sendable, Hashable {
@@ -47,4 +53,23 @@ protocol HealthDataProviding: Sendable {
     func distanceSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample]
     /// Continuously monitored ascent, derived from flights climbed.
     func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample]
+    /// Sums of `kind` recorded inside the given workout windows, bucketed by
+    /// `granularity`. Workouts do not carry step statistics, so this is the only
+    /// reliable way to report steps taken during an activity.
+    func workoutQuantitySamples(
+        in interval: DateInterval,
+        kind: ContinuousQuantity,
+        within windows: [DateInterval],
+        granularity: StepGranularity
+    ) async throws -> [QuantitySample]
+}
+
+extension Array {
+    /// Splits the array into chunks of at most `maxSize` elements.
+    func chunked(maxSize: Int) -> [[Element]] {
+        guard maxSize > 0, count > maxSize else { return isEmpty ? [] : [self] }
+        return stride(from: 0, to: count, by: maxSize).map {
+            Array(self[$0..<Swift.min($0 + maxSize, count)])
+        }
+    }
 }
