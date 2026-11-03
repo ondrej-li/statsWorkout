@@ -7,7 +7,7 @@ The app reads steps and workouts from HealthKit, aggregates them in a pure Swift
 renders them with Swift Charts: zoomable bar charts, a cumulative progress comparison and
 press-and-drag value inspection.
 
-> **Status:** skeleton. The data pipeline, charts, settings and mock data source are functional;
+> **Status:** 1.0.0 — statistics, charts, scopes, settings and the App Store pages are done;
 > widgets, goals and background delivery are not implemented yet.
 
 <p align="center">
