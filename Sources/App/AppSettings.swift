@@ -29,7 +29,7 @@ final class AppSettings {
         elevationUnit = storedElevation ?? .meters
         comparisonMode = storedComparison ?? .previousPeriod
         preferredPeriod = storedPeriod ?? .month
-        dataScope = storedScope ?? .all
+        dataScope = ScreenshotRoute.scope ?? storedScope ?? .all
 
         if defaults.object(forKey: Key.useMockData) == nil {
             useMockData = Self.defaultsToMockData

@@ -148,6 +148,13 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 - Background HealthKit delivery and incremental caching
 - Localisation (string catalog is already enabled)
 
+## Screenshots and artwork
+
+`make shots` captures the App Store screenshots from clean simulators
+(6.1"/6.3" iPhone and 13" iPad) into [screenshots/](screenshots) — see
+[screenshots/README.md](screenshots/README.md) for the frames and the debug-only
+launch arguments behind them. Icon candidates live in [docs/icons/](docs/icons).
+
 ## Publishing to TestFlight
 
 ```bash

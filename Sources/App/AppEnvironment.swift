@@ -29,7 +29,11 @@ final class AppEnvironment {
         AppEnvironment(
             settings: AppSettings(),
             healthKit: HealthKitDataSource(),
-            mock: MockHealthDataSource()
+            mock: MockHealthDataSource(),
+            now: {
+                if let fixed = ScreenshotRoute.now { return fixed }
+                return Date()
+            }
         )
     }
 
