@@ -94,11 +94,16 @@ Data (HealthDataProviding → HealthKitDataSource | MockHealthDataSource)
 
 | Metric | Source | Aggregation |
 | --- | --- | --- |
-| Steps | HealthKit `stepCount`, daily buckets | sum of all-day steps |
-| Distance | Workout statistics for walking/running, cycling, swimming | sum |
-| Elevation gain | `HKMetadataKeyElevationAscended`, else flights climbed × 3 m | sum (may be absent) |
+| Steps | HealthKit `stepCount`, hourly or daily buckets | sum of all-day steps |
+| Distance | HealthKit walking/running, cycling and swimming distance | sum |
+| Elevation gain | Flights climbed × 3 m, or the workout's recorded ascent if larger | sum (may be absent) |
 | Exercise duration | `HKWorkout` duration for curated workout types | sum |
 | Activities | Curated workout types (run, walk, cycle, hike, swim, strength, yoga, other) | count |
+
+The *Activities* scope reports only what happened inside a workout. HealthKit does **not** attach
+step statistics to workouts (`HKWorkout.statistics(for: .stepCount)` returns `nil`), so steps and
+distance for that scope come from statistics queries scoped to the workout time ranges; the
+workout's own statistics are only used as a fallback when no samples are returned.
 
 ### Project layout
 

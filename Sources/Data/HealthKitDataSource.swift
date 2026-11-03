@@ -150,10 +150,11 @@ struct HealthKitDataSource: HealthDataProviding {
     private func statisticsCollection(
         for type: HKQuantityType,
         in interval: DateInterval,
-        granularity: StepGranularity
+        granularity: StepGranularity,
+        predicate samplePredicate: NSPredicate? = nil
     ) async throws -> HKStatisticsCollection {
         let calendar = Calendar.current
-        let predicate = HKQuery.predicateForSamples(
+        let predicate = samplePredicate ?? HKQuery.predicateForSamples(
             withStart: interval.start,
             end: interval.end,
             options: [.strictStartDate]
@@ -177,6 +178,101 @@ struct HealthKitDataSource: HealthDataProviding {
             intervalComponents: components
         )
         return try await descriptor.result(for: store)
+    }
+
+    func workoutQuantitySamples(
+        in interval: DateInterval,
+        kind: ContinuousQuantity,
+        within windows: [DateInterval],
+        granularity: StepGranularity
+    ) async throws -> [QuantitySample] {
+        guard isAvailable else { throw HealthDataError.unavailable }
+        guard interval.duration > 0 else { return [] }
+
+        let merged = Self.merge(windows, clippedTo: interval)
+        guard !merged.isEmpty else { return [] }
+
+        let types: [HKQuantityType]
+        let unit: HKUnit
+        switch kind {
+        case .steps:
+            types = [HKQuantityType(.stepCount)]
+            unit = .count()
+        case .distance:
+            types = Self.distanceQuantityTypes
+            unit = .meter()
+        }
+
+        do {
+            var totals: [Date: (end: Date, value: Double)] = [:]
+
+            func accumulate(_ predicate: NSPredicate) async throws {
+                for type in types {
+                    let collection = try await statisticsCollection(
+                        for: type,
+                        in: interval,
+                        granularity: granularity,
+                        predicate: predicate
+                    )
+                    collection.enumerateStatistics(from: interval.start, to: interval.end) { statistics, _ in
+                        guard let sum = statistics.sumQuantity()?.doubleValue(for: unit), sum > 0 else { return }
+                        let existing = totals[statistics.startDate]
+                        totals[statistics.startDate] = (statistics.endDate, (existing?.value ?? 0) + sum)
+                    }
+                }
+            }
+
+            func windowPredicate(_ window: DateInterval) -> NSPredicate {
+                HKQuery.predicateForSamples(
+                    withStart: window.start,
+                    end: window.end,
+                    options: [.strictStartDate]
+                )
+            }
+
+            // HealthKit expands each subpredicate, so long workout lists are split
+            // into chunks instead of one giant compound predicate.
+            for chunk in merged.chunked(maxSize: 60) {
+                do {
+                    try await accumulate(
+                        NSCompoundPredicate(orPredicateWithSubpredicates: chunk.map(windowPredicate))
+                    )
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    // A compound predicate is rejected in some configurations;
+                    // query the windows one by one instead.
+                    for window in chunk {
+                        try await accumulate(windowPredicate(window))
+                    }
+                }
+            }
+
+            return totals
+                .map { QuantitySample(start: $0.key, end: $0.value.end, value: $0.value.value) }
+                .sorted { $0.start < $1.start }
+        } catch {
+            throw Self.map(error)
+        }
+    }
+
+    /// Clips windows to the query interval and merges overlapping ones.
+    private static func merge(_ windows: [DateInterval], clippedTo interval: DateInterval) -> [DateInterval] {
+        let clipped = windows.compactMap { window -> DateInterval? in
+            let start = max(window.start, interval.start)
+            let end = min(window.end, interval.end)
+            return end > start ? DateInterval(start: start, end: end) : nil
+        }.sorted { $0.start < $1.start }
+
+        var merged: [DateInterval] = []
+        for window in clipped {
+            if let last = merged.last, window.start <= last.end {
+                merged[merged.count - 1] = DateInterval(start: last.start, end: max(last.end, window.end))
+            } else {
+                merged.append(window)
+            }
+        }
+        return merged
     }
 
     private static func map(_ error: Error) -> HealthDataError {

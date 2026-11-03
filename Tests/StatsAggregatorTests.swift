@@ -49,28 +49,38 @@ struct StatsAggregatorTests {
         steps: [StepSample] = [],
         distance: [QuantitySample] = [],
         elevation: [QuantitySample] = [],
+        workoutSteps: [QuantitySample] = [],
+        workoutDistance: [QuantitySample] = [],
         now: Date,
         scope: DataScope = .all
     ) -> PeriodStats {
-        aggregator.stats(
-            for: range,
+        let samples = HealthSamples(
             activities: activities,
             steps: steps,
             distance: distance,
             elevation: elevation,
-            now: now
-        ).stats(for: scope)
+            workoutSteps: workoutSteps,
+            workoutDistance: workoutDistance
+        )
+        return aggregator.stats(for: range, samples: samples, now: now).stats(for: scope)
     }
 
-    @Test("Activities scope only counts samples recorded inside workouts")
+    private func sample(_ day: Int, _ value: Double, month: Int = 11) -> QuantitySample {
+        let start = TestSupport.date(calendar, 2026, month, day)
+        return QuantitySample(start: start, end: start.addingTimeInterval(86_400), value: value)
+    }
+
+    @Test("Activities scope uses the samples recorded inside workouts")
     func activitiesScope() {
         let stats = stats(
             november,
             activities: [
-                activity(3, distance: 10_000, elevation: 120, steps: 4_000),
-                activity(10, minutes: 30, distance: 5_000, elevation: 40, steps: 2_000),
-                activity(10, hour: 18, distance: 10_000, elevation: 120, steps: 3_000)
+                activity(3, distance: 10_000, elevation: 120),
+                activity(10, minutes: 30, distance: 5_000, elevation: 40),
+                activity(10, hour: 18, distance: 10_000, elevation: 120)
             ],
+            workoutSteps: [sample(3, 4_000), sample(10, 5_000)],
+            workoutDistance: [sample(3, 10_000), sample(10, 15_000)],
             now: TestSupport.date(calendar, 2026, 11, 20),
             scope: .activities
         )
@@ -82,6 +92,38 @@ struct StatsAggregatorTests {
         #expect(stats.totals.distanceMeters == 25_000)
         #expect(stats.totals.elevationGainMeters == 280)
         #expect(stats.totals.exerciseDuration == expectedDuration)
+    }
+
+    @Test("Workout steps come from samples, not from the workout statistics")
+    func workoutStepsWithoutWorkoutStatistics() {
+        // HealthKit does not attach step statistics to workouts, so a workout
+        // arrives with a nil stepCount. Steps must still be reported.
+        let stats = stats(
+            november,
+            activities: [activity(3, distance: 10_000, elevation: 0, steps: nil)],
+            steps: [steps(3, 9_000)],
+            workoutSteps: [sample(3, 6_400)],
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .activities
+        )
+
+        #expect(stats.totals.steps == 6_400)
+        #expect(stats.totals.activityCount == 1)
+    }
+
+    @Test("Workout statistics are the fallback when no samples are available")
+    func workoutStatisticsFallback() {
+        let stats = stats(
+            november,
+            activities: [activity(3, distance: 10_000, elevation: 0, steps: 5_500)],
+            workoutSteps: [],
+            workoutDistance: [],
+            now: TestSupport.date(calendar, 2026, 11, 20),
+            scope: .activities
+        )
+
+        #expect(stats.totals.steps == 5_500)
+        #expect(stats.totals.distanceMeters == 10_000)
     }
 
     @Test("All-data scope uses continuous monitoring for steps, distance and elevation")
@@ -106,12 +148,14 @@ struct StatsAggregatorTests {
 
     @Test("Both scopes are produced by a single aggregation pass")
     func bothScopes() {
-        let aggregated = aggregator.stats(
-            for: november,
+        let samples = HealthSamples(
             activities: [activity(3, steps: 1_000)],
             steps: [steps(3, 8_000)],
-            distance: [daySample(3, 12_000)],
-            elevation: [],
+            distance: [daySample(3, 12_000)]
+        )
+        let aggregated = aggregator.stats(
+            for: november,
+            samples: samples,
             now: TestSupport.date(calendar, 2026, 11, 20)
         )
 

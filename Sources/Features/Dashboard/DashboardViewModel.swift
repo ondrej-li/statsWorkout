@@ -168,12 +168,38 @@ final class DashboardViewModel {
 
             guard generation == loadGeneration else { return }
 
-            let aggregated = StatsAggregator(periodCalendar: environment.periodCalendar).stats(
-                for: request.range,
+            // Steps and distance inside the workouts come from sample queries
+            // scoped to the workout windows: HealthKit does not attach step
+            // statistics to workouts.
+            let windows = activities.map { DateInterval(start: $0.start, end: $0.end) }
+            async let workoutStepsTask = source.workoutQuantitySamples(
+                in: window,
+                kind: .steps,
+                within: windows,
+                granularity: stepGranularity
+            )
+            async let workoutDistanceTask = source.workoutQuantitySamples(
+                in: window,
+                kind: .distance,
+                within: windows,
+                granularity: stepGranularity
+            )
+            let (workoutSteps, workoutDistance) = try await (workoutStepsTask, workoutDistanceTask)
+
+            guard generation == loadGeneration else { return }
+
+            let samples = HealthSamples(
                 activities: activities,
                 steps: steps,
                 distance: distance,
                 elevation: elevation,
+                workoutSteps: workoutSteps,
+                workoutDistance: workoutDistance
+            )
+
+            let aggregated = StatsAggregator(periodCalendar: environment.periodCalendar).stats(
+                for: request.range,
+                samples: samples,
                 comparison: request.comparison,
                 now: environment.now()
             )
