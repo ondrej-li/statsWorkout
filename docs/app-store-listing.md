@@ -109,6 +109,14 @@ Apple indexes the app name and subtitle too, so "stats", "health" and "period" a
 repeated here. Keywords are per-locale: the Czech listing can use its own set, for example
 `kroky,trénink,aktivita,vzdálenost,převýšení,chůze,běh,kolo,turistika,fitness`.
 
+## What's new — next version (unreleased)
+
+```
+• Workout detail: route map, splits and full statistics for every activity
+• Workouts are named after when and where they happened — "Your morning walk around Brtnice"
+• Statistics stay up to date in the background, with an on-device cache
+```
+
 ## What's new — 1.0.0
 
 ```

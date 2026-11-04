@@ -10,6 +10,8 @@ final class AppEnvironment {
     let mock: any HealthDataProviding
     let calendar: Calendar
     let sync: HealthSyncCoordinator
+    private let realPlaces: any PlaceResolving
+    private let mockPlaces: any PlaceResolving
     private(set) var backgroundDelivery: HealthKitBackgroundDelivery?
     /// Bumped whenever HealthKit reports new data in the background, so open
     /// screens know to refresh.
@@ -22,6 +24,8 @@ final class AppEnvironment {
         mock: any HealthDataProviding,
         calendar: Calendar = .autoupdatingCurrent,
         cacheStore: any HealthCacheStoring = FileHealthCacheStore(),
+        realPlaces: any PlaceResolving = CoreLocationPlaceResolver(),
+        mockPlaces: any PlaceResolving = MockPlaceResolver(),
         now: @escaping @Sendable () -> Date = { Date() }
     ) {
         self.settings = settings
@@ -29,8 +33,19 @@ final class AppEnvironment {
         self.mock = mock
         self.calendar = calendar
         self.sync = HealthSyncCoordinator(store: cacheStore, calendar: calendar)
+        self.realPlaces = realPlaces
+        self.mockPlaces = mockPlaces
         self.now = now
     }
+
+    /// Placeholder used while a detail view builds its own model; the real
+    /// environment is injected by the view hierarchy.
+    @MainActor static let placeholder = AppEnvironment(
+        settings: AppSettings(persists: false),
+        healthKit: MockHealthDataSource(),
+        mock: MockHealthDataSource(),
+        cacheStore: TransientHealthCacheStore()
+    )
 
     static func live() -> AppEnvironment {
         AppEnvironment(
@@ -44,6 +59,12 @@ final class AppEnvironment {
         )
     }
 
+struct TransientHealthCacheStore: HealthCacheStoring {
+    func load() async -> HealthSampleCache? { nil }
+    func save(_ cache: HealthSampleCache) async {}
+    func clear() async {}
+}
+
 #if DEBUG
     static func preview() -> AppEnvironment {
         AppEnvironment(
@@ -56,6 +77,11 @@ final class AppEnvironment {
 
     var dataSource: any HealthDataProviding {
         settings.useMockData ? mock : healthKit
+    }
+
+    /// Names the place a workout happened in; demo data uses the demo towns.
+    var places: any PlaceResolving {
+        settings.useMockData ? mockPlaces : realPlaces
     }
 
     var dataSourceKey: String {

@@ -118,6 +118,26 @@ struct MetricFormatter: Sendable {
         }
     }
 
+    /// Pace as minutes and seconds per distance unit, e.g. `5:42 /km`.
+    func pace(_ secondsPerUnit: TimeInterval, unit: DistanceUnit) -> String {
+        let total = max(0, secondsPerUnit)
+        let minutes = Int(total) / 60
+        let seconds = Int(total) % 60
+        return String(format: "%d:%02d /%@", minutes, seconds, unit.symbol)
+    }
+
+    func heartRate(_ beatsPerMinute: Double) -> String {
+        integer(beatsPerMinute.rounded()) + " bpm"
+    }
+
+    /// "1 km" or "1 mi", plus "0.6 km" for a partial split.
+    func splitDistance(_ value: Double, unit: DistanceUnit) -> String {
+        if abs(value - 1) < 0.02 {
+            return "1 \(unit.symbol)"
+        }
+        return decimal(value, digits: 1) + " " + unit.symbol
+    }
+
     func duration(minutes: Double) -> String {
         stringForDuration(minutes * 60, style: .full)
     }

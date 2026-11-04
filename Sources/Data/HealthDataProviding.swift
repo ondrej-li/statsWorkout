@@ -62,6 +62,8 @@ protocol HealthDataProviding: Sendable {
         within windows: [DateInterval],
         granularity: StepGranularity
     ) async throws -> [QuantitySample]
+    /// Route and heart rate for one workout, loaded only when its detail screen opens.
+    func workoutDetail(for activity: ActivitySample) async throws -> WorkoutDetail
 }
 
 extension Array {

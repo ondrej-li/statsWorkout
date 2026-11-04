@@ -30,6 +30,7 @@ struct HealthKitDataSource: HealthDataProviding {
             HKQuantityType(.distanceSwimming),
             HKQuantityType(.flightsClimbed),
             HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.heartRate),
             HKObjectType.workoutType()
         ]
     }
@@ -273,6 +274,78 @@ struct HealthKitDataSource: HealthDataProviding {
             }
         }
         return merged
+    }
+
+    func workoutDetail(for activity: ActivitySample) async throws -> WorkoutDetail {
+        guard isAvailable else { throw HealthDataError.unavailable }
+
+        let window = DateInterval(start: activity.start, end: activity.end)
+
+        // Each helper builds its own predicate: NSPredicate is not Sendable, so
+        // it cannot cross into the concurrent child tasks.
+        async let routeTask = routePoints(in: window)
+        async let heartRateTask = heartRate(in: window)
+        let (route, heart) = try await (routeTask, heartRateTask)
+
+        return WorkoutDetail(
+            route: route,
+            averageHeartRate: heart.average,
+            maximumHeartRate: heart.maximum,
+            energyKilocalories: activity.activeEnergyKilocalories
+        )
+    }
+
+    private func routePoints(in window: DateInterval) async throws -> [RoutePoint] {
+        let predicate = HKQuery.predicateForSamples(
+            withStart: window.start,
+            end: window.end,
+            options: [.strictStartDate]
+        )
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workoutRoute(predicate)],
+            sortDescriptors: [SortDescriptor(\HKWorkoutRoute.startDate, order: .forward)]
+        )
+
+        do {
+            let routes = try await descriptor.result(for: store)
+            var points: [RoutePoint] = []
+            for route in routes {
+                for try await location in HKWorkoutRouteQueryDescriptor(route).results(for: store) {
+                    points.append(
+                        RoutePoint(
+                            latitude: location.coordinate.latitude,
+                            longitude: location.coordinate.longitude,
+                            altitude: location.verticalAccuracy >= 0 ? location.altitude : nil,
+                            time: location.timestamp
+                        )
+                    )
+                }
+            }
+            return points
+        } catch let error as HKError where error.code == .errorNoData {
+            return []
+        } catch {
+            // A workout recorded without a route is normal, not an error.
+            return []
+        }
+    }
+
+    private func heartRate(in window: DateInterval) async throws -> (average: Double?, maximum: Double?) {
+        let predicate = HKQuery.predicateForSamples(
+            withStart: window.start,
+            end: window.end,
+            options: [.strictStartDate]
+        )
+        let descriptor = HKStatisticsQueryDescriptor(
+            predicate: .quantitySample(type: HKQuantityType(.heartRate), predicate: predicate),
+            options: [.discreteAverage, .discreteMax]
+        )
+
+        guard let statistics = try? await descriptor.result(for: store) else { return (nil, nil) }
+        return (
+            statistics.averageQuantity()?.doubleValue(for: .count().unitDivided(by: .minute())),
+            statistics.maximumQuantity()?.doubleValue(for: .count().unitDivided(by: .minute()))
+        )
     }
 
     private static func map(_ error: Error) -> HealthDataError {

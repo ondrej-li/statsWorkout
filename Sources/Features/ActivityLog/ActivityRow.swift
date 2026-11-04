@@ -15,7 +15,7 @@ struct ActivityRow: View {
                 .background(accent.opacity(0.12), in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(activity.kind.title)
+                Text(WorkoutNaming().shortTitle(for: activity, place: nil))
                     .font(.subheadline.weight(.semibold))
                 HStack(spacing: 5) {
                     Text(activity.start.formatted(date: .omitted, time: .shortened))
