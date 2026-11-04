@@ -59,6 +59,10 @@ actor RecordingHealthDataSource: HealthDataProviding {
         []
     }
 
+    func workoutDetail(for activity: ActivitySample) async throws -> WorkoutDetail {
+        WorkoutDetail()
+    }
+
     func reset() { requests.removeAll() }
 
     /// Windows requested at day granularity.

@@ -44,9 +44,10 @@ final class ActivityLogViewModel {
 struct ActivityLogView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var model = ActivityLogViewModel()
+    @State private var path: [ActivitySample] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 switch model.phase {
                 case .failed(let message):
@@ -68,7 +69,19 @@ struct ActivityLogView: View {
                 }
             }
             .navigationTitle("Activities")
-            .task { await model.load(environment: environment) }
+            .navigationDestination(for: ActivitySample.self) { activity in
+                ActivityDetailView(activity: activity)
+            }
+            .task {
+                await model.load(environment: environment)
+                // App Store artwork is captured by opening a workout directly.
+                if let index = ScreenshotRoute.workoutIndex {
+                    let activities = model.days.flatMap(\.activities)
+                    if activities.indices.contains(index) {
+                        path = [activities[index]]
+                    }
+                }
+            }
             .refreshable { await model.load(environment: environment) }
         }
     }
@@ -78,9 +91,7 @@ struct ActivityLogView: View {
             ForEach(model.days) { day in
                 Section(day.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))) {
                     ForEach(day.activities) { activity in
-                        NavigationLink {
-                            ActivityDetailView(activity: activity, formatter: environment.formatter)
-                        } label: {
+                        NavigationLink(value: activity) {
                             ActivityRow(activity: activity, formatter: environment.formatter)
                         }
                     }
@@ -91,62 +102,9 @@ struct ActivityLogView: View {
     }
 }
 
-struct ActivityDetailView: View {
-    let activity: ActivitySample
-    let formatter: MetricFormatter
-
-    var body: some View {
-        ScrollView {
-            VStack(spacing: 14) {
-                Card {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 10) {
-                            Image(systemName: activity.kind.systemImage)
-                                .font(.title2)
-                                .foregroundStyle(Theme.accent(for: .exerciseDuration))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(activity.kind.title).font(.title3.weight(.semibold))
-                                Text(activity.start.formatted(date: .abbreviated, time: .shortened))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        Divider().opacity(0.5)
-
-                        row("Duration", formatter.duration(minutes: activity.duration / 60))
-                        if let distance = activity.distanceMeters {
-                            row("Distance", formatter.string(distance, for: .distance))
-                        }
-                        if let elevation = activity.elevationGainMeters {
-                            row("Elevation gain", formatter.string(elevation, for: .elevationGain))
-                        }
-                        if let energy = activity.activeEnergyKilocalories {
-                            row("Energy", "\(Int(energy.rounded())) kcal")
-                        }
-                    }
-                }
-            }
-            .padding(16)
-        }
-        .background(Theme.screenBackground)
-        .navigationTitle("Workout")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func row(_ title: String, _ value: String) -> some View {
-        HStack {
-            Text(title).font(.subheadline).foregroundStyle(.secondary)
-            Spacer()
-            Text(value).font(.subheadline.weight(.semibold)).monospacedDigit()
-        }
-    }
-}
-
 #if DEBUG
 #Preview {
     ActivityLogView()
         .environment(AppEnvironment.preview())
 }
-
 #endif

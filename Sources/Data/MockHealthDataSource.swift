@@ -34,6 +34,10 @@ struct MockHealthDataSource: HealthDataProviding {
         MockHealthData.elevationSamples(in: interval, granularity: granularity, calendar: calendar, seed: seed)
     }
 
+    func workoutDetail(for activity: ActivitySample) async throws -> WorkoutDetail {
+        MockHealthData.workoutDetail(for: activity, calendar: calendar, seed: seed)
+    }
+
     func workoutQuantitySamples(
         in interval: DateInterval,
         kind: ContinuousQuantity,
@@ -47,6 +51,34 @@ struct MockHealthDataSource: HealthDataProviding {
             granularity: granularity,
             calendar: calendar,
             seed: seed
+        )
+    }
+}
+
+/// Places the demo data pretends to happen around.
+struct MockTown: Sendable, Hashable {
+    let name: String
+    let latitude: Double
+    let longitude: Double
+
+    static let all: [MockTown] = [
+        MockTown(name: "Brtnice", latitude: 49.3061, longitude: 15.6763),
+        MockTown(name: "Okříšky", latitude: 49.2597, longitude: 15.7700),
+        MockTown(name: "Třebíč", latitude: 49.2144, longitude: 15.8816),
+        MockTown(name: "Jihlava", latitude: 49.3961, longitude: 15.5912),
+        MockTown(name: "Telč", latitude: 49.1846, longitude: 15.4536)
+    ]
+
+    static func nearest(to point: RoutePoint) -> MockTown? {
+        all.min { left, right in
+            distance(left, point) < distance(right, point)
+        }
+    }
+
+    private static func distance(_ town: MockTown, _ point: RoutePoint) -> Double {
+        RouteGeometry.distance(
+            from: RoutePoint(latitude: town.latitude, longitude: town.longitude),
+            to: point
         )
     }
 }
@@ -342,6 +374,60 @@ enum MockHealthData {
         }
 
         return hours
+    }
+
+    // MARK: - Workout detail
+
+    /// A believable loop around one of the demo towns, plus a heart rate.
+    static func workoutDetail(
+        for activity: ActivitySample,
+        calendar: Calendar,
+        seed: UInt64
+    ) -> WorkoutDetail {
+        let index = UInt64(dayIndex(for: activity.start, calendar: calendar))
+        let town = MockTown.all[Int(unitRandom(seed &+ index, 31) * Double(MockTown.all.count)) % MockTown.all.count]
+
+        guard activity.kind.isDistanceBased else {
+            let average = 96 + unitRandom(seed &+ index, 32) * 34
+            return WorkoutDetail(
+                route: [],
+                averageHeartRate: average,
+                maximumHeartRate: average + 22,
+                energyKilocalories: activity.activeEnergyKilocalories
+            )
+        }
+
+        let pointCount = 160
+        let radius = max(350, min(2_600, (activity.distanceMeters ?? 4_000) / 6.8))
+        var points: [RoutePoint] = []
+        points.reserveCapacity(pointCount)
+
+        for step in 0..<pointCount {
+            let progress = Double(step) / Double(pointCount - 1)
+            let angle = progress * 2 * .pi
+            // A slightly irregular loop, so it does not look machine-drawn.
+            let wobble = 0.82 + 0.18 * sin(angle * 3 + Double(index % 7))
+            let latitudeOffset = sin(angle) * radius / 111_000 * wobble
+            let longitudeOffset = cos(angle) * radius / (111_000 * cos(town.latitude * .pi / 180)) * wobble
+            let elevation = 420 + 40 * sin(angle * 2) + unitRandom(seed &+ index, UInt64(step)) * 8
+
+            points.append(
+                RoutePoint(
+                    latitude: town.latitude + latitudeOffset,
+                    longitude: town.longitude + longitudeOffset,
+                    altitude: elevation,
+                    time: activity.start.addingTimeInterval(activity.duration * progress)
+                )
+            )
+        }
+
+        let average = 118 + unitRandom(seed &+ index, 32) * 28
+        return WorkoutDetail(
+            route: points,
+            averageHeartRate: average,
+            maximumHeartRate: average + 24 + unitRandom(seed &+ index, 33) * 12,
+            energyKilocalories: activity.activeEnergyKilocalories
+        )
     }
 
     private static func dailyTotal(for day: Date, calendar: Calendar, seed: UInt64) -> Double {

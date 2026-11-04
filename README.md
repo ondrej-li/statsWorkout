@@ -23,6 +23,11 @@ press-and-drag value inspection.
 - **Two data scopes** — *All data* (continuous Health monitoring: all-day steps, walking/cycling/
   swimming distance, ascent from flights climbed) or *Activities* (only samples inside workouts),
   switchable on the dashboard and remembered between launches.
+- **Workout detail** — tapping a workout opens a Health-style screen: route map, duration, distance,
+  pace, elevation, energy, steps, heart rate and (for distance activities) per-kilometre splits.
+- **Automatic naming** — each workout is titled from when and where it happened: "Your morning walk
+  around Brtnice", "Your night run around Okříšky". The time of day comes from the start time; the
+  settlement from reverse-geocoding the centre of the route (demo data uses a fixed set of towns).
 - **Metrics** — steps, distance, elevation gain, exercise duration and activity count.
 - **Comparison** — every metric is compared with the previous period (or the same period last year),
   limited to the elapsed part of the period so partial months compare fairly.
@@ -153,7 +158,6 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 
 - Widgets and Live Activity summaries
 - Goal setting and rings
-- Workout detail screens with route maps
 - Background HealthKit delivery and incremental caching
 - Localisation (string catalog is already enabled)
 

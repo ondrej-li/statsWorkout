@@ -68,6 +68,11 @@ enum ScreenshotRoute {
         return formatter.date(from: raw)
     }
 
+    /// Opens the detail screen of the nth workout in the activity log.
+    static var workoutIndex: Int? {
+        value(after: "-screenshotWorkout").flatMap(Int.init)
+    }
+
     /// Delay before the frame is taken is handled by the Makefile; this only
     /// controls what the app shows.
     static var isActive: Bool {
