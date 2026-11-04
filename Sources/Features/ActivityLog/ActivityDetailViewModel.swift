@@ -26,6 +26,10 @@ final class ActivityDetailViewModel {
 
     var formatter: MetricFormatter { environment.formatter }
 
+    /// True for a generated demo workout: no HealthKit identity means nothing
+    /// about it was recorded.
+    var isDemo: Bool { activity.healthKitUUID == nil }
+
     var naming: WorkoutNaming {
         WorkoutNaming(calendar: environment.calendar)
     }
@@ -37,14 +41,23 @@ final class ActivityDetailViewModel {
     var splits: [WorkoutSplit] {
         guard detail.hasRoute else { return [] }
         let splitLength: Double = environment.settings.distanceUnit == .kilometers ? 1_000 : 1_609.344
-        return RouteGeometry.splits(of: detail.route, splitLength: splitLength)
+        // GPS traces are a little longer than the distance HealthKit reports, so
+        // splits are laid out along the recorded distance rather than the raw
+        // trace length.
+        return RouteGeometry.splits(
+            of: detail.route,
+            splitLength: splitLength,
+            totalDistance: activity.distanceMeters
+        )
     }
 
     func load() async {
         if case .loaded = phase { return }
         phase = .loading
         do {
-            let source = environment.dataSource
+            // Never mix sources: a real workout is read from HealthKit even when
+            // demo data is switched on elsewhere in the app.
+            let source = environment.dataSource(for: activity)
             detail = try await source.workoutDetail(for: activity)
             phase = .loaded
         } catch {

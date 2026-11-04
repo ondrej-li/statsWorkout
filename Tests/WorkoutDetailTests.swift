@@ -127,6 +127,16 @@ struct RouteGeometryTests {
         #expect(abs((splits.last?.pace ?? 0) - 360) < 8)
     }
 
+    @Test("Splits follow the distance HealthKit recorded, not the raw trace")
+    func calibratedSplits() {
+        // A 4.0 km workout whose GPS trace runs 10% long.
+        let route = straightRoute(kilometres: 4.4, minutes: 20)
+        let splits = RouteGeometry.splits(of: route, splitLength: 1_000, totalDistance: 4_000)
+
+        #expect(splits.count == 4)
+        #expect(abs(splits.reduce(0) { $0 + $1.distance } - 4.0) < 0.2)
+    }
+
     @Test("Routes shorter than a split produce nothing")
     func shortRoute() {
         #expect(RouteGeometry.splits(of: straightRoute(kilometres: 0.05, minutes: 1), splitLength: 1_000).isEmpty)
@@ -214,6 +224,47 @@ struct WorkoutNamingIntegrationTests {
 
         settings.useMockData = false
         #expect(environment.dataSourceKey == "healthkit")
+    }
+
+    @Test("A workout is always resolved against the source that made it")
+    func perActivitySource() async {
+        let settings = AppSettings(persists: false)
+        // The "HealthKit" side is a source with no routes at all, so a route in
+        // the result can only have come from the demo generator.
+        let environment = AppEnvironment(
+            settings: settings,
+            healthKit: RecordingHealthDataSource(calendar: calendar),
+            mock: MockHealthDataSource(calendar: calendar, seed: 2),
+            calendar: calendar,
+            cacheStore: InMemoryHealthCacheStore(),
+            mockPlaces: MockPlaceResolver()
+        )
+
+        let recorded = ActivitySample(
+            kind: .walking,
+            start: TestSupport.date(calendar, 2026, 11, 3, 8),
+            end: TestSupport.date(calendar, 2026, 11, 3, 9),
+            healthKitUUID: UUID()
+        )
+        let generated = ActivitySample(
+            kind: .walking,
+            start: TestSupport.date(calendar, 2026, 11, 3, 8),
+            end: TestSupport.date(calendar, 2026, 11, 3, 9)
+        )
+
+        // Demo mode must never reach a recorded workout.
+        settings.useMockData = true
+
+        let recordedSource = environment.dataSource(for: recorded)
+        let generatedSource = environment.dataSource(for: generated)
+
+        // The mock returns a generated route; HealthKit has none for a fake id,
+        // which is enough to tell the two apart here.
+        let recordedDetail = try? await recordedSource.workoutDetail(for: recorded)
+        let generatedDetail = try? await generatedSource.workoutDetail(for: generated)
+
+        #expect(recordedDetail?.route.isEmpty == true)
+        #expect(generatedDetail?.route.isEmpty == false)
     }
 
     @Test("Places for workouts that left the cache are pruned")

@@ -20,6 +20,12 @@ final class ActivityLogViewModel {
     var phase: Phase = .loading
     var days: [Day] = []
 
+    /// True when every workout on screen is generated demo data.
+    var showsDemoData: Bool {
+        let activities = days.flatMap(\.activities)
+        return !activities.isEmpty && activities.allSatisfy { $0.healthKitUUID == nil }
+    }
+
     func load(environment: AppEnvironment) async {
         phase = .loading
         do {
@@ -72,7 +78,9 @@ struct ActivityLogView: View {
             .navigationDestination(for: ActivitySample.self) { activity in
                 ActivityDetailView(activity: activity)
             }
-            .task {
+            // Reloading on the switch keeps the list from showing real workouts
+            // while the app is in demo mode, or the other way round.
+            .task(id: environment.settings.useMockData) {
                 await model.load(environment: environment)
                 await environment.resolveWorkoutPlaces(for: model.days.flatMap(\.activities))
                 // App Store artwork is captured by opening a workout directly.
@@ -105,7 +113,7 @@ struct ActivityLogView: View {
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
-            if environment.settings.useMockData {
+            if model.showsDemoData {
                 demoFooter
             }
         }

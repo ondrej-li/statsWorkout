@@ -13,14 +13,14 @@ struct ActivityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                if environment.settings.useMockData {
+                if model.isDemo {
                     demoBanner
                 }
                 header
                 if model.detail.hasRoute {
                     VStack(alignment: .leading, spacing: 6) {
                         WorkoutRouteMap(route: model.detail.route)
-                        if environment.settings.useMockData {
+                        if model.isDemo {
                             Label("Sample route — demo data", systemImage: "flask")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
