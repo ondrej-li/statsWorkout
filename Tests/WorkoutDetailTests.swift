@@ -193,6 +193,29 @@ struct WorkoutNamingIntegrationTests {
         #expect(relaunched.workoutTitle(for: activity) == title)
     }
 
+    @Test("Real data is read from HealthKit, demo data from the generator")
+    func dataSourceSelection() {
+        let settings = AppSettings(persists: false)
+        let store = InMemoryHealthCacheStore()
+        let healthKit = MockHealthDataSource(calendar: calendar, seed: 1)
+        let mock = MockHealthDataSource(calendar: calendar, seed: 2)
+        let environment = AppEnvironment(
+            settings: settings,
+            healthKit: healthKit,
+            mock: mock,
+            calendar: calendar,
+            cacheStore: store,
+            mockPlaces: MockPlaceResolver()
+        )
+
+        // A workout route can only be generated while demo data is switched on.
+        settings.useMockData = true
+        #expect(environment.dataSourceKey == "mock")
+
+        settings.useMockData = false
+        #expect(environment.dataSourceKey == "healthkit")
+    }
+
     @Test("Places for workouts that left the cache are pruned")
     func prunesPlaces() async {
         let store = InMemoryHealthCacheStore()

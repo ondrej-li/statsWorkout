@@ -13,6 +13,9 @@ struct ActivityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
+                if environment.settings.useMockData {
+                    demoBanner
+                }
                 header
                 if model.detail.hasRoute {
                     VStack(alignment: .leading, spacing: 6) {
@@ -35,6 +38,17 @@ struct ActivityDetailView: View {
         .navigationTitle(model.activity.kind.title)
         .navigationBarTitleDisplayMode(.inline)
         .task { await model.load() }
+    }
+
+    /// Demo workouts invent their numbers and route; say so up front rather
+    /// than leaving it to a caption under the map.
+    private var demoBanner: some View {
+        Label("Demo data — this workout is generated on this device, not recorded by Apple Health", systemImage: "flask.fill")
+            .font(.caption)
+            .foregroundStyle(.orange)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Header
