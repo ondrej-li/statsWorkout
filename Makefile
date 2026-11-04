@@ -7,7 +7,7 @@ BUILD_NUMBER ?=
 PROJECT := StatsWorkout.xcodeproj
 SCHEME := StatsWorkout
 
-.PHONY: help generate build test open clean select-xcode testflight deploy-site shots
+.PHONY: help generate build test open clean select-xcode testflight deploy-site shots shots-cs
 
 help:
 	@echo "make generate    - regenerate $(PROJECT) from project.yml (XcodeGen)"
@@ -17,7 +17,8 @@ help:
 	@echo "make select-xcode- point xcode-select at a full Xcode installation"
 	@echo "make testflight  - archive and upload a build to TestFlight"
 	@echo "make deploy-site - publish Website/ to stats-workout.ondralinek.cz"
-	@echo "make shots       - capture the App Store screenshots from clean simulators"
+	@echo "make shots       - capture the App Store screenshots (English) from clean simulators"
+	@echo "make shots-cs    - the same frames with the app in Czech"
 	@echo "make clean       - remove build products"
 
 generate:
@@ -48,13 +49,16 @@ deploy-site:
 	./Scripts/deploy-site.sh
 
 shots:
-	./Scripts/capture-screenshots.sh
+	./Scripts/capture-screenshots.sh all en
+
+shots-cs:
+	./Scripts/capture-screenshots.sh all cs
 
 shots-iphone:
-	./Scripts/capture-screenshots.sh iphone
+	./Scripts/capture-screenshots.sh iphone en
 
 shots-ipad:
-	./Scripts/capture-screenshots.sh ipad
+	./Scripts/capture-screenshots.sh ipad en
 
 clean:
 	rm -rf build DerivedData

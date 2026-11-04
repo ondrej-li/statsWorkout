@@ -105,10 +105,12 @@ final class ActivityDetailViewModel {
     func load(force: Bool = false) async {
         if case .loaded = phase, !force { return }
         phase = .loading
+        ScreenshotRoute.markLoading("detail")
 
         do {
             detail = try await source.workoutDetail(for: activity)
             phase = .loaded
+            ScreenshotRoute.markReady("detail")
         } catch {
             phase = .failed(error.localizedDescription)
             return

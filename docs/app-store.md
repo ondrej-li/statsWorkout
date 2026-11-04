@@ -13,7 +13,7 @@ The public pages live at [stats-workout.ondralinek.cz](https://stats-workout.ond
 | Field | Value |
 | --- | --- |
 | Name (30) | `StatsWorkout` — see the listing file |
-| Subtitle (30) | `Apple Health stats, any period` |
+| Subtitle (30) | `Health stats for every period` |
 | Bundle ID | `com.defik74.statsWorkout` |
 | SKU | `statsworkout-001` |
 | Primary language | English (U.S.) |
@@ -66,20 +66,22 @@ sample activity is generated locally on the device and clearly labelled in the U
 
 ## Screenshots
 
-Captured, not assembled: `make shots` writes them to [screenshots/](../screenshots)
-(1206 × 2622 iPhone, 2064 × 2752 iPad), all with a 9:41 status bar, no alpha and
-no metadata chunks.
+Captured, not assembled: `make shots` and `make shots-cs` write them to
+[screenshots/](../screenshots) in one folder per localisation (1206 × 2622 iPhone, 2064 × 2752
+iPad), all with a 9:41 status bar, no alpha and no metadata chunks.
 
-| Slot | File |
-| --- | --- |
-| 1 | `iphone/01-dashboard.png` — month totals, five metrics, All data / Activities switch |
-| 2 | `iphone/02-day.png` — hourly bars with a value callout + progress chart |
-| 3 | `iphone/03-progress.png` — running total against the previous period |
-| 4 | `iphone/04-activities-only.png` — workout-only numbers |
-| 5 | `iphone/05-activity-log.png` — workouts by day |
-| 6 | `iphone/06-settings.png` — units and defaults |
+| Slot | File | Shows |
+| --- | --- | --- |
+| 1 | `en/iphone/01-dashboard.png` | month totals, five metrics, All data / Activities switch |
+| 2 | `en/iphone/02-day.png` | hourly bars with a value callout + progress chart |
+| 3 | `en/iphone/03-progress.png` | running total against the previous period |
+| 4 | `en/iphone/04-workout-detail.png` | a workout with its route map, metrics and splits |
+| 5 | `en/iphone/05-activity-log.png` | workouts by day, with their names |
+| 6 | `en/iphone/06-activities-only.png` | workout-only numbers |
+| 7 | `en/iphone/07-settings.png` | units, language, defaults and Health access |
 
-iPad: `ipad/01-dashboard.png`, `02-day.png`, `03-progress.png`, `04-activity-log.png`.
+iPad: `en/ipad/01-dashboard.png`, `02-day.png`, `03-progress.png`, `04-workout-detail.png`,
+`05-activity-log.png`. The same seven/five frames exist under `cs/` for the Czech listing.
 
 ## App icon
 
@@ -94,6 +96,7 @@ Japanese, Korean and Simplified Chinese. `CFBundleLocalizations` is not used —
 files in `Resources/L10n/` read by the app's own `L10n` layer, and the language is chosen in
 Settings (or follows the device, falling back to English).
 
-App Store Connect only needs the primary language (English) for the listing; the additional app
-languages are picked up from the binary once the localized metadata is uploaded. The website and the
-listing copy remain English with a Czech translation.
+Only English and Czech have App Store metadata and screenshots; the other eight app languages work
+in the binary without a listing of their own. Adding one later needs a subtitle, promotional text,
+description, keywords and What's New in that language (the app's catalogs in `Resources/L10n/` are a
+good source) plus a screenshot run. The website remains English with a Czech translation.

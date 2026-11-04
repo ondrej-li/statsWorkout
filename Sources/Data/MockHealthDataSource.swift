@@ -135,6 +135,17 @@ enum MockHealthData {
             }
         }
 
+        // Yesterday is the first *complete* day a user can look at, so it gets a
+        // workout too instead of an empty activity card.
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: today),
+           !result.contains(where: { calendar.isDate($0.start, inSameDayAs: yesterday) }) {
+            let localSeed = seed &+ UInt64(dayIndex(for: yesterday, calendar: calendar)) &* 5_003 &+ 211
+            let activity = makeActivity(localSeed: localSeed, day: yesterday, calendar: calendar)
+            if activity.start >= calendar.startOfDay(for: interval.start), activity.start < limit {
+                result.append(activity)
+            }
+        }
+
         return result.filter { $0.start >= interval.start && $0.start < limit }
     }
 

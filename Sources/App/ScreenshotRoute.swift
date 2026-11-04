@@ -73,6 +73,43 @@ enum ScreenshotRoute {
         value(after: "-screenshotWorkout").flatMap(Int.init)
     }
 
+    /// Artwork only: hides the "demo data" labels, so a marketing frame shows the
+    /// product rather than its scaffolding. The data is still the demo
+    /// generator's; only the labels are suppressed, and only in the frames taken
+    /// with `-screenshotHideDemoLabels`.
+    static var hidesDemoLabels: Bool {
+        isActive && value(after: "-screenshotHideDemoLabels") == "YES"
+    }
+
+    /// Leaves a marker in the app's Documents folder once a screen has finished
+    /// loading, so the capture script can wait for real content instead of
+    /// guessing with a fixed delay. A cold launch can take ten seconds on a busy
+    /// machine, and a skeleton card photographs perfectly well.
+    static func markReady(_ screen: String) {
+        #if DEBUG
+        guard isActive, let marker = readyMarker(screen) else { return }
+        try? Data(screen.utf8).write(to: marker)
+        #endif
+    }
+
+    /// Removes the marker when a screen starts loading again, so a reload never
+    /// photographs as if it were finished.
+    static func markLoading(_ screen: String) {
+        #if DEBUG
+        guard isActive, let marker = readyMarker(screen) else { return }
+        try? FileManager.default.removeItem(at: marker)
+        #endif
+    }
+
+    #if DEBUG
+    private static func readyMarker(_ screen: String) -> URL? {
+        guard isActive,
+              let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        else { return nil }
+        return documents.appendingPathComponent("screenshot-ready-\(screen)")
+    }
+    #endif
+
     /// Delay before the frame is taken is handled by the Makefile; this only
     /// controls what the app shows.
     static var isActive: Bool {

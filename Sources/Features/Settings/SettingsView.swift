@@ -153,7 +153,10 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(L10n.t(.tabSettings))
-            .task { await refreshCacheInfo() }
+            .task {
+                await refreshCacheInfo()
+                ScreenshotRoute.markReady("settings")
+            }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
                 Task { await refreshCacheInfo() }

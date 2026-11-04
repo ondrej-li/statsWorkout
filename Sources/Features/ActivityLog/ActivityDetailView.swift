@@ -17,7 +17,7 @@ struct ActivityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
-                if model.isDemo {
+                if model.isDemo && !ScreenshotRoute.hidesDemoLabels {
                     demoBanner
                 }
                 header
@@ -102,10 +102,12 @@ struct ActivityDetailView: View {
         case .demo:
             VStack(alignment: .leading, spacing: 6) {
                 WorkoutRouteMap(route: model.detail.route)
-                Label(L10n.t(.detailRouteDemo), systemImage: "flask")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                routeDetails
+                if !ScreenshotRoute.hidesDemoLabels {
+                    Label(L10n.t(.detailRouteDemo), systemImage: "flask")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    routeDetails
+                }
             }
         case .recorded:
             VStack(alignment: .leading, spacing: 6) {

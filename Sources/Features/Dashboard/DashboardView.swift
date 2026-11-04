@@ -89,7 +89,7 @@ struct DashboardView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    if environment.settings.useMockData {
+                    if environment.settings.useMockData && !ScreenshotRoute.hidesDemoLabels {
                         Label(L10n.t(.demoBadge), systemImage: "flask")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
