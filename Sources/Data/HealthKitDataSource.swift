@@ -283,7 +283,7 @@ struct HealthKitDataSource: HealthDataProviding {
 
         // Each helper builds its own predicate: NSPredicate is not Sendable, so
         // it cannot cross into the concurrent child tasks.
-        async let routeTask = routePoints(in: window)
+        async let routeTask = routePoints(for: activity, in: window)
         async let heartRateTask = heartRate(in: window)
         let (route, heart) = try await (routeTask, heartRateTask)
 
@@ -295,12 +295,20 @@ struct HealthKitDataSource: HealthDataProviding {
         )
     }
 
-    private func routePoints(in window: DateInterval) async throws -> [RoutePoint] {
-        let predicate = HKQuery.predicateForSamples(
-            withStart: window.start,
-            end: window.end,
-            options: [.strictStartDate]
-        )
+    /// The route exactly as recorded: HealthKit's own samples for this workout.
+    /// When the workout's HealthKit identity is known the query is tied to that
+    /// workout, so two overlapping workouts can never mix their routes.
+    private func routePoints(for activity: ActivitySample, in window: DateInterval) async throws -> [RoutePoint] {
+        let predicate: NSPredicate
+        if let uuid = activity.healthKitUUID, let workout = try? await workout(withUUID: uuid) {
+            predicate = HKQuery.predicateForObjects(from: workout)
+        } else {
+            predicate = HKQuery.predicateForSamples(
+                withStart: window.start,
+                end: window.end,
+                options: [.strictStartDate]
+            )
+        }
         let descriptor = HKSampleQueryDescriptor(
             predicates: [.workoutRoute(predicate)],
             sortDescriptors: [SortDescriptor(\HKWorkoutRoute.startDate, order: .forward)]
@@ -328,6 +336,15 @@ struct HealthKitDataSource: HealthDataProviding {
             // A workout recorded without a route is normal, not an error.
             return []
         }
+    }
+
+    private func workout(withUUID uuid: UUID) async throws -> HKWorkout? {
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workout(HKQuery.predicateForObject(with: uuid))],
+            sortDescriptors: [],
+            limit: 1
+        )
+        return try await descriptor.result(for: store).first
     }
 
     private func heartRate(in window: DateInterval) async throws -> (average: Double?, maximum: Double?) {

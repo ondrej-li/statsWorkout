@@ -15,7 +15,14 @@ struct ActivityDetailView: View {
             VStack(spacing: 14) {
                 header
                 if model.detail.hasRoute {
-                    WorkoutRouteMap(route: model.detail.route)
+                    VStack(alignment: .leading, spacing: 6) {
+                        WorkoutRouteMap(route: model.detail.route)
+                        if environment.settings.useMockData {
+                            Label("Sample route — demo data", systemImage: "flask")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
                 metrics
                 if !model.splits.isEmpty {

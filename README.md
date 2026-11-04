@@ -31,14 +31,19 @@ route, splits and statistics.
   average and maximum heart rate, plus per-kilometre (or per-mile) splits.
 - **Automatic naming** — each workout is titled from when and where it happened: *"Your morning walk
   around Brtnice"*, *"Your night run around Okříšky"*. Time of day comes from the start time, the
-  settlement from reverse-geocoding the centre of the route; with no route or no place the sentence
-  simply drops the location.
+  settlement from reverse-geocoding the centre of the recorded route. Names appear in the workout
+  list too: rows start as *"Your afternoon run"* and rename themselves once the settlement is known,
+  which is cached so it is geocoded only once. With no route or no place, the sentence simply drops
+  the location.
 - **Background updates** — HealthKit background delivery plus an on-device cache of daily totals, so
   the app is current when it opens and a month or year view does not re-read years of samples.
 - **Settings** — distance (km/mi) and elevation (m/ft) units, default period, comparison baseline,
   cache status and a clear-cache action.
-- **Demo data** — a deterministic generator (including routes around Vysočina towns) makes the app
-  fully usable in the simulator without any Health data; on by default in simulator builds.
+- **Demo data** — a deterministic generator (including plausible-looking routes around Vysočina
+  towns) makes the app fully usable in the simulator without any Health data; on by default in
+  simulator builds. Demo mode is always labelled — a "Demo" chip on the dashboard, a footer in the
+  workout list and "Sample route — demo data" under the map — so generated data is never mistaken
+  for a recording.
 
 ## Requirements
 
@@ -130,6 +135,14 @@ Data (HealthSyncCoordinator + cache → HealthDataProviding → HealthKit | Mock
 HealthKit does **not** attach step statistics to workouts (`HKWorkout.statistics(for: .stepCount)`
 returns `nil`), so the *Activities* scope reads steps and distance from statistics queries scoped to
 the workout time ranges; the workout's own statistics are only a fallback when no samples come back.
+
+### Routes
+
+A workout's route is **exactly what Apple Health recorded**: the `HKWorkoutRoute` samples belonging
+to that workout, fetched through `HKQuery.predicateForObjects(from:)` so two workouts that overlap in
+time can never mix their traces. Nothing is synthesised, smoothed or extended; workouts recorded
+without a route simply show no map. Only demo data draws its own traces, and those are labelled in
+the UI.
 
 ### Naming rules
 

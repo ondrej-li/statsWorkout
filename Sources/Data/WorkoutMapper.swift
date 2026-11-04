@@ -34,7 +34,8 @@ enum WorkoutMapper {
             activeEnergyKilocalories: workout
                 .statistics(for: HKQuantityType(.activeEnergyBurned))?
                 .sumQuantity()?
-                .doubleValue(for: .kilocalorie())
+                .doubleValue(for: .kilocalorie()),
+            healthKitUUID: workout.uuid
         )
     }
 

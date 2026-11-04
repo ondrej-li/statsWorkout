@@ -10,6 +10,8 @@ struct ActivitySample: Identifiable, Hashable, Codable, Sendable {
     let elevationGainMeters: Double?
     let stepCount: Double?
     let activeEnergyKilocalories: Double?
+    /// HealthKit's identifier for the workout, used to fetch exactly its route.
+    let healthKitUUID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -19,7 +21,8 @@ struct ActivitySample: Identifiable, Hashable, Codable, Sendable {
         distanceMeters: Double? = nil,
         elevationGainMeters: Double? = nil,
         stepCount: Double? = nil,
-        activeEnergyKilocalories: Double? = nil
+        activeEnergyKilocalories: Double? = nil,
+        healthKitUUID: UUID? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -29,9 +32,14 @@ struct ActivitySample: Identifiable, Hashable, Codable, Sendable {
         self.elevationGainMeters = elevationGainMeters
         self.stepCount = stepCount
         self.activeEnergyKilocalories = activeEnergyKilocalories
+        self.healthKitUUID = healthKitUUID
     }
 
     var duration: TimeInterval { max(0, end.timeIntervalSince(start)) }
+
+    /// Stable across refreshes and cache reloads, so a resolved place name
+    /// stays attached to the workout.
+    var stableID: String { (healthKitUUID ?? id).uuidString }
 }
 
 /// Workout categories the dashboard groups activities into.

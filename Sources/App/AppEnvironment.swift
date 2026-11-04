@@ -16,6 +16,10 @@ final class AppEnvironment {
     /// Bumped whenever HealthKit reports new data in the background, so open
     /// screens know to refresh.
     private(set) var healthUpdates = 0
+    /// Settlement per workout (`ActivitySample.stableID`), resolved once and cached.
+    private(set) var workoutPlaces: [String: String] = [:]
+    private var resolvingPlaces: Set<String> = []
+    private var didLoadPlaces = false
     var now: @Sendable () -> Date
 
     init(
@@ -102,8 +106,60 @@ struct TransientHealthCacheStore: HealthCacheStoring {
         delivery.start()
     }
 
+    // MARK: - Workout naming
+
+    /// "Your morning walk around Brtnice"; falls back to "Your morning walk"
+    /// until the place has been resolved.
+    func workoutTitle(for activity: ActivitySample) -> String {
+        naming.title(for: activity, place: workoutPlaces[activity.stableID])
+    }
+
+    var naming: WorkoutNaming {
+        WorkoutNaming(calendar: calendar)
+    }
+
+    /// Resolves place names for the workouts that do not have one yet. Runs in
+    /// the background as the list appears, so rows rename themselves from
+    /// "Morning walk" to "Morning walk around Brtnice".
+    func resolveWorkoutPlaces(for activities: [ActivitySample], limit: Int = 8) async {
+        if !didLoadPlaces {
+            didLoadPlaces = true
+            let cached = await sync.placeNames(sourceKey: dataSourceKey)
+            if !cached.isEmpty {
+                workoutPlaces.merge(cached) { _, new in new }
+            }
+        }
+
+        let pending = activities
+            .filter { $0.kind.isDistanceBased && workoutPlaces[$0.stableID] == nil && !resolvingPlaces.contains($0.stableID) }
+            .prefix(limit)
+        guard !pending.isEmpty else { return }
+
+        for activity in pending {
+            resolvingPlaces.insert(activity.stableID)
+            defer { resolvingPlaces.remove(activity.stableID) }
+
+            guard let detail = try? await dataSource.workoutDetail(for: activity),
+                  let centre = RouteGeometry.centroid(of: detail.route),
+                  let place = await places.placeName(near: centre) else { continue }
+
+            workoutPlaces[activity.stableID] = place
+            await sync.setPlaceName(place, for: activity.stableID, sourceKey: dataSourceKey)
+        }
+    }
+
+    /// Records a place found by another screen (the detail view) so the list
+    /// picks it up without geocoding twice.
+    func rememberPlace(_ place: String, for activity: ActivitySample) async {
+        guard workoutPlaces[activity.stableID] != place else { return }
+        workoutPlaces[activity.stableID] = place
+        await sync.setPlaceName(place, for: activity.stableID, sourceKey: dataSourceKey)
+    }
+
     /// Drops cached samples, e.g. when switching between demo and real data.
     func invalidateCache() {
+        workoutPlaces = [:]
+        didLoadPlaces = false
         Task { await sync.invalidate() }
     }
 

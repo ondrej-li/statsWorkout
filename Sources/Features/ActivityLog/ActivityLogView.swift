@@ -74,6 +74,7 @@ struct ActivityLogView: View {
             }
             .task {
                 await model.load(environment: environment)
+                await environment.resolveWorkoutPlaces(for: model.days.flatMap(\.activities))
                 // App Store artwork is captured by opening a workout directly.
                 if let index = ScreenshotRoute.workoutIndex {
                     let activities = model.days.flatMap(\.activities)
@@ -92,13 +93,33 @@ struct ActivityLogView: View {
                 Section(day.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))) {
                     ForEach(day.activities) { activity in
                         NavigationLink(value: activity) {
-                            ActivityRow(activity: activity, formatter: environment.formatter)
+                            ActivityRow(
+                                activity: activity,
+                                title: environment.workoutTitle(for: activity),
+                                formatter: environment.formatter
+                            )
                         }
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .safeAreaInset(edge: .bottom) {
+            if environment.settings.useMockData {
+                demoFooter
+            }
+        }
+    }
+
+    /// Demo workouts are generated on device; say so, so a synthetic route is
+    /// never mistaken for a recorded one.
+    private var demoFooter: some View {
+        Label("Sample workouts generated on this device", systemImage: "flask")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(.bar)
     }
 }
 
