@@ -144,6 +144,18 @@ time can never mix their traces. Nothing is synthesised, smoothed or extended; w
 without a route simply show no map. Only demo data draws its own traces, and those are labelled in
 the UI.
 
+A workout is always resolved against the source that produced it: anything carrying a HealthKit
+identity is read from HealthKit, so switching demo data on can never repaint a recorded workout with
+a generated route. The demo labels follow the workout itself rather than the global switch.
+
+### Splits
+
+Splits are timed from the route — each boundary is interpolated from the timestamps of the two
+surrounding points — but laid out along the distance HealthKit recorded for the workout. A GPS trace
+is usually a few percent longer than that distance (corners, drift), so using the raw trace length
+would push every split late; the calibration keeps the split count and the totals consistent with
+the rest of the screen.
+
 ### Naming rules
 
 | Input | Result |

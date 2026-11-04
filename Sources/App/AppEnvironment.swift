@@ -92,6 +92,14 @@ struct TransientHealthCacheStore: HealthCacheStoring {
         settings.useMockData ? "mock" : "healthkit"
     }
 
+    /// The source a workout came from. A workout recorded by Apple Health always
+    /// carries its HealthKit identity, so it is always resolved against
+    /// HealthKit - flipping the demo switch must never dress a real workout in a
+    /// generated route.
+    func dataSource(for activity: ActivitySample) -> any HealthDataProviding {
+        activity.healthKitUUID == nil ? mock : healthKit
+    }
+
     /// Starts HealthKit background updates. Called once access exists; the
     /// observers make iOS wake the app when steps or workouts change.
     func startBackgroundDelivery() {
@@ -139,7 +147,7 @@ struct TransientHealthCacheStore: HealthCacheStoring {
             resolvingPlaces.insert(activity.stableID)
             defer { resolvingPlaces.remove(activity.stableID) }
 
-            guard let detail = try? await dataSource.workoutDetail(for: activity),
+            guard let detail = try? await dataSource(for: activity).workoutDetail(for: activity),
                   let centre = RouteGeometry.centroid(of: detail.route),
                   let place = await places.placeName(near: centre) else { continue }
 

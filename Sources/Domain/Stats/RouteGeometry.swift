@@ -66,13 +66,27 @@ enum RouteGeometry {
 
     /// Splits of `splitLength` metres, interpolating the crossing time so a
     /// partial last split gets the pace it actually had.
+    /// - Parameters:
+    ///   - splitLength: nominal length of a split (1 km or 1 mile).
+    ///   - totalDistance: the distance HealthKit recorded for the workout. A GPS
+    ///     trace is usually slightly longer than that, so the splits are laid out
+    ///     along this distance and the trace is only used for timing.
     static func splits(
         of route: [RoutePoint],
         splitLength: Double,
+        totalDistance: Double? = nil,
         fallbackStart: Date? = nil,
         fallbackDuration: TimeInterval = 0
     ) -> [WorkoutSplit] {
         guard route.count >= 2, splitLength > 0 else { return [] }
+
+        let traceLength = length(of: route)
+        let stepLength: Double = {
+            guard let totalDistance, totalDistance > 0, traceLength > 0 else { return splitLength }
+            let scale = traceLength / totalDistance
+            // Only calibrate when the two disagree meaningfully.
+            return abs(scale - 1) > 0.02 ? splitLength * scale : splitLength
+        }()
 
         var splits: [WorkoutSplit] = []
         var sinceSplit = 0.0
@@ -86,8 +100,8 @@ enum RouteGeometry {
             var remaining = segment
             var cursor = previous
 
-            while sinceSplit + remaining >= splitLength {
-                let needed = splitLength - sinceSplit
+            while sinceSplit + remaining >= stepLength {
+                let needed = stepLength - sinceSplit
                 let fraction = needed / segment
                 let crossing = interpolate(from: cursor, to: point, fraction: fraction)
 
@@ -108,9 +122,9 @@ enum RouteGeometry {
         }
 
         // Trailing partial split.
-        if sinceSplit > splitLength * 0.15, let start = currentSplitStart {
+        if sinceSplit > stepLength * 0.15, let start = currentSplitStart {
             let end = route.last?.time ?? start.addingTimeInterval(fallbackDuration)
-            let fraction = sinceSplit / splitLength
+            let fraction = sinceSplit / stepLength
             splits.append(
                 WorkoutSplit(index: splitIndex, distance: fraction, duration: end.timeIntervalSince(start))
             )
