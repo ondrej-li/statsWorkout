@@ -71,11 +71,35 @@ cat > "$EXPORT_OPTIONS" <<PLIST
 </plist>
 PLIST
 
-xcodebuild -exportArchive \
+UPLOAD_LOG="$(mktemp)"
+if ! xcodebuild -exportArchive \
     -archivePath "$ARCHIVE" \
     -exportOptionsPlist "$EXPORT_OPTIONS" \
     -exportPath "$EXPORT_DIR" \
-    -allowProvisioningUpdates
+    -allowProvisioningUpdates 2>&1 | tee "$UPLOAD_LOG"; then
+    if grep -qE "Failed to Use Accounts|Invalid credentials|missing Xcode-Username" "$UPLOAD_LOG"; then
+        cat >&2 <<HINT
+
+error: App Store Connect rejected the upload because Xcode has no valid account.
+
+The archive itself is fine: $ARCHIVE
+Only the upload needs credentials, so nothing has to be rebuilt.
+
+Fix it once in Xcode:
+  Xcode → Settings → Accounts → sign in with the Apple ID for team $TEAM_ID
+  (if it is already listed, remove it and add it again)
+
+Then run this script again, or retry just the upload:
+  xcodebuild -exportArchive -archivePath "$ARCHIVE" \
+      -exportOptionsPlist "$EXPORT_OPTIONS" -exportPath "$EXPORT_DIR" \
+      -allowProvisioningUpdates
+
+HINT
+    fi
+    rm -f "$UPLOAD_LOG"
+    exit 1
+fi
+rm -f "$UPLOAD_LOG"
 
 echo "==> Uploaded build $BUILD_NUMBER. Processing usually takes a few minutes;"
 echo "    TestFlight builds appear under App Store Connect > TestFlight."
