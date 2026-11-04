@@ -16,6 +16,8 @@ press-and-drag value inspection.
 
 ## Features
 
+- **Background updates** — HealthKit background delivery plus an on-device cache of daily totals,
+  so a month or year view does not re-read years of samples every time.
 - **Periods** — rolling 24 hours, calendar day (hourly buckets), week, month (default), quarter,
   year and custom ranges, with back/forward navigation, "Today" and locale-aware week boundaries.
 - **Two data scopes** — *All data* (continuous Health monitoring: all-day steps, walking/cycling/
@@ -89,6 +91,13 @@ Data (HealthDataProviding → HealthKitDataSource | MockHealthDataSource)
 - **Data** is behind a `Sendable` protocol: `HealthKitDataSource` uses the async
   `HKSampleQueryDescriptor` / `HKStatisticsCollectionQueryDescriptor` APIs; `MockHealthDataSource`
   produces stable pseudo-random data from a fixed seed.
+- **`HealthSyncCoordinator`** sits in front of the data source: daily totals are cached in
+  Application Support, and a load only re-reads the days since the last sync (plus a two-day
+  overlap that also catches edits and deletions). Day and 24-hour views read hourly data live — two
+  days at most — so the cache never has to hold hourly buckets.
+- **`HealthKitBackgroundDelivery`** enables background delivery for steps, distances, flights,
+  active energy and workouts and keeps an `HKObserverQuery` per type. HealthKit wakes the app when
+  something changes; the dashboard refreshes when it becomes active again.
 
 ### Metric definitions
 
