@@ -18,7 +18,7 @@ final class ActivityDetailViewModel {
     private let environment: AppEnvironment
     private let places: any PlaceResolving
 
-    init(activity: ActivitySample, environment: AppEnvironment, places: any PlaceResolving? = nil) {
+    init(activity: ActivitySample, environment: AppEnvironment, places: (any PlaceResolving)? = nil) {
         self.activity = activity
         self.environment = environment
         self.places = places ?? environment.places
