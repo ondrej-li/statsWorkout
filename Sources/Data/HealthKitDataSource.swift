@@ -300,7 +300,12 @@ struct HealthKitDataSource: HealthDataProviding {
     /// workout, so two overlapping workouts can never mix their routes.
     private func routePoints(for activity: ActivitySample, in window: DateInterval) async throws -> [RoutePoint] {
         let predicate: NSPredicate
-        if let uuid = activity.healthKitUUID, let workout = try? await workout(withUUID: uuid) {
+        if let uuid = activity.healthKitUUID {
+            // A real workout is only ever shown with its own route. If HealthKit
+            // cannot produce that workout there is no route to show — falling back
+            // to a time window could pick up a different workout's trace, which is
+            // exactly the kind of invention this app must never do.
+            guard let workout = try? await workout(withUUID: uuid) else { return [] }
             predicate = HKQuery.predicateForObjects(from: workout)
         } else {
             predicate = HKQuery.predicateForSamples(
