@@ -76,7 +76,7 @@ struct ActivityLogView: View {
             }
             .navigationTitle("Activities")
             .navigationDestination(for: ActivitySample.self) { activity in
-                ActivityDetailView(activity: activity)
+                ActivityDetailView(activity: activity, environment: environment)
             }
             // Reloading on the switch keeps the list from showing real workouts
             // while the app is in demo mode, or the other way round.

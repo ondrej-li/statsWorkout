@@ -42,15 +42,6 @@ final class AppEnvironment {
         self.now = now
     }
 
-    /// Placeholder used while a detail view builds its own model; the real
-    /// environment is injected by the view hierarchy.
-    @MainActor static let placeholder = AppEnvironment(
-        settings: AppSettings(persists: false),
-        healthKit: MockHealthDataSource(),
-        mock: MockHealthDataSource(),
-        cacheStore: TransientHealthCacheStore()
-    )
-
     static func live() -> AppEnvironment {
         AppEnvironment(
             settings: AppSettings(),
@@ -62,12 +53,6 @@ final class AppEnvironment {
             }
         )
     }
-
-struct TransientHealthCacheStore: HealthCacheStoring {
-    func load() async -> HealthSampleCache? { nil }
-    func save(_ cache: HealthSampleCache) async {}
-    func clear() async {}
-}
 
 #if DEBUG
     static func preview() -> AppEnvironment {

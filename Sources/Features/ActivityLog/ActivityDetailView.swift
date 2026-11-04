@@ -3,11 +3,15 @@ import SwiftUI
 /// A workout the way the Health app presents one: what it was, where it
 /// happened, the numbers, and the splits for distance activities.
 struct ActivityDetailView: View {
-    @Environment(AppEnvironment.self) private var environment
     @State private var model: ActivityDetailViewModel
 
-    init(activity: ActivitySample) {
-        _model = State(initialValue: ActivityDetailViewModel(activity: activity, environment: .placeholder))
+    /// The environment is passed in, not read from `@Environment`: a view model
+    /// built in `init` cannot see environment values, and a placeholder here
+    /// once meant every route came from the demo generator.
+    init(activity: ActivitySample, environment: AppEnvironment) {
+        _model = State(
+            initialValue: ActivityDetailViewModel(activity: activity, environment: environment)
+        )
     }
 
     var body: some View {
@@ -17,16 +21,7 @@ struct ActivityDetailView: View {
                     demoBanner
                 }
                 header
-                if model.detail.hasRoute {
-                    VStack(alignment: .leading, spacing: 6) {
-                        WorkoutRouteMap(route: model.detail.route)
-                        if model.isDemo {
-                            Label("Sample route — demo data", systemImage: "flask")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                routeSection
                 metrics
                 if !model.splits.isEmpty {
                     splitsCard
@@ -84,7 +79,7 @@ struct ActivityDetailView: View {
     private var dayTitle: String {
         model.activity.start.formatted(
             .dateTime.weekday(.wide).day().month(.wide).year()
-                .locale(environment.calendar.locale ?? .autoupdatingCurrent)
+                .locale(model.calendar.locale ?? .autoupdatingCurrent)
         )
     }
 
@@ -92,6 +87,67 @@ struct ActivityDetailView: View {
         let start = model.activity.start.formatted(date: .omitted, time: .shortened)
         let end = model.activity.end.formatted(date: .omitted, time: .shortened)
         return "\(start) – \(end)"
+    }
+
+    // MARK: - Route
+
+    /// Says where the trace came from, so a generated route can never pass for a
+    /// recording. Absence is stated too: HealthKit stores routes only for
+    /// workouts recorded by a watch or an app that writes them.
+    @ViewBuilder
+    private var routeSection: some View {
+        switch model.provenance {
+        case .loading:
+            SkeletonCard(height: 240)
+        case .demo:
+            VStack(alignment: .leading, spacing: 6) {
+                WorkoutRouteMap(route: model.detail.route)
+                Label("Sample route — demo data", systemImage: "flask")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                routeDetails
+            }
+        case .recorded:
+            VStack(alignment: .leading, spacing: 6) {
+                WorkoutRouteMap(route: model.detail.route)
+                Label("Recorded by Apple Health", systemImage: "checkmark.seal")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                routeDetails
+            }
+        case .notRecorded:
+            Card {
+                Label("No route recorded by Apple Health for this workout", systemImage: "map")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var routeDetails: some View {
+        DisclosureGroup("Route details") {
+            VStack(alignment: .leading, spacing: 6) {
+                detailRow("Source", model.isDemo ? "Demo generator" : "Apple Health")
+                if case let .recorded(points) = model.provenance {
+                    detailRow("Recorded points", "\(points)")
+                }
+                if let range = model.traceTimeRange {
+                    detailRow("Trace time", range)
+                }
+                detailRow("Workout", model.activity.start.formatted(date: .abbreviated, time: .shortened))
+            }
+            .padding(.top, 6)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+    }
+
+    private func detailRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value).monospacedDigit()
+        }
     }
 
     // MARK: - Metrics
@@ -132,7 +188,7 @@ struct ActivityDetailView: View {
         guard let distance = model.activity.distanceMeters, distance > 0, model.activity.duration > 0 else {
             return nil
         }
-        let unit = environment.settings.distanceUnit
+        let unit = model.distanceUnit
         let units = unit.value(fromMeters: distance)
         guard units > 0 else { return nil }
         return model.formatter.pace(model.activity.duration / units, unit: unit)
@@ -164,7 +220,7 @@ struct ActivityDetailView: View {
                 SectionLabel(title: "Splits")
                 ForEach(model.splits) { split in
                     HStack(spacing: 10) {
-                        Text(model.formatter.splitDistance(split.distance, unit: environment.settings.distanceUnit))
+                        Text(model.formatter.splitDistance(split.distance, unit: model.distanceUnit))
                             .font(.subheadline.weight(.medium))
                             .monospacedDigit()
                             .frame(width: 66, alignment: .leading)
@@ -176,7 +232,7 @@ struct ActivityDetailView: View {
 
                         Spacer(minLength: 0)
 
-                        Text(model.formatter.pace(split.pace, unit: environment.settings.distanceUnit))
+                        Text(model.formatter.pace(split.pace, unit: model.distanceUnit))
                             .font(.subheadline.weight(.semibold))
                             .monospacedDigit()
                     }
@@ -191,6 +247,7 @@ struct ActivityDetailView: View {
 
 #if DEBUG
 #Preview {
+    let environment = AppEnvironment.preview()
     NavigationStack {
         ActivityDetailView(
             activity: ActivitySample(
@@ -201,9 +258,10 @@ struct ActivityDetailView: View {
                 elevationGainMeters: 120,
                 stepCount: 11_200,
                 activeEnergyKilocalories: 610
-            )
+            ),
+            environment: environment
         )
-        .environment(AppEnvironment.preview())
+        .environment(environment)
     }
 }
 #endif

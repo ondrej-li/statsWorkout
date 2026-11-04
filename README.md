@@ -146,7 +146,14 @@ the UI.
 
 A workout is always resolved against the source that produced it: anything carrying a HealthKit
 identity is read from HealthKit, so switching demo data on can never repaint a recorded workout with
-a generated route. The demo labels follow the workout itself rather than the global switch.
+a generated route. The source is resolved by the caller and passed into the detail view model —
+never looked up inside it — because a view model built in `init` cannot read `@Environment` and an
+earlier placeholder environment silently handed every detail screen a mock.
+
+The detail screen states where its trace came from, under the map: *Recorded by Apple Health*,
+*Sample route — demo data*, or *No route recorded by Apple Health for this workout*. A "Route
+details" disclosure adds the source, point count and trace time, so the truth is readable on the
+device rather than inferred from a screenshot.
 
 ### Splits
 

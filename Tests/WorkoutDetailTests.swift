@@ -267,6 +267,65 @@ struct WorkoutNamingIntegrationTests {
         #expect(generatedDetail?.route.isEmpty == false)
     }
 
+    @Test("A recorded workout never gets a generated route")
+    func recordedWorkoutHasNoFakeRoute() async {
+        let settings = AppSettings(persists: false)
+        let environment = AppEnvironment(
+            settings: settings,
+            healthKit: RecordingHealthDataSource(calendar: calendar),
+            mock: MockHealthDataSource(calendar: calendar, seed: 2),
+            calendar: calendar,
+            cacheStore: InMemoryHealthCacheStore(),
+            mockPlaces: MockPlaceResolver()
+        )
+        settings.useMockData = true
+
+        // A genuine workout: HealthKit identity, no route recorded for it.
+        let recorded = ActivitySample(
+            kind: .walking,
+            start: TestSupport.date(calendar, 2026, 11, 3, 8),
+            end: TestSupport.date(calendar, 2026, 11, 3, 9, 10),
+            distanceMeters: 4_130,
+            healthKitUUID: UUID()
+        )
+
+        let model = ActivityDetailViewModel(activity: recorded, environment: environment)
+        await model.load()
+
+        #expect(model.detail.route.isEmpty)
+        #expect(model.provenance == .notRecorded)
+        #expect(model.splits.isEmpty)
+        #expect(model.title.contains(" around ") == false)
+    }
+
+    @Test("A demo workout is labelled as such")
+    func demoWorkoutIsLabelled() async {
+        let settings = AppSettings(persists: false)
+        settings.useMockData = true
+        let environment = AppEnvironment(
+            settings: settings,
+            healthKit: RecordingHealthDataSource(calendar: calendar),
+            mock: MockHealthDataSource(calendar: calendar, seed: 2),
+            calendar: calendar,
+            cacheStore: InMemoryHealthCacheStore(),
+            mockPlaces: MockPlaceResolver()
+        )
+
+        let generated = ActivitySample(
+            kind: .walking,
+            start: TestSupport.date(calendar, 2026, 11, 3, 8),
+            end: TestSupport.date(calendar, 2026, 11, 3, 9),
+            distanceMeters: 4_000
+        )
+
+        let model = ActivityDetailViewModel(activity: generated, environment: environment)
+        await model.load()
+
+        #expect(model.isDemo)
+        #expect(model.provenance == .demo)
+        #expect(model.detail.route.isEmpty == false)
+    }
+
     @Test("Places for workouts that left the cache are pruned")
     func prunesPlaces() async {
         let store = InMemoryHealthCacheStore()
