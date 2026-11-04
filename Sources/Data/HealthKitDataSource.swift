@@ -31,7 +31,11 @@ struct HealthKitDataSource: HealthDataProviding {
             HKQuantityType(.flightsClimbed),
             HKQuantityType(.activeEnergyBurned),
             HKQuantityType(.heartRate),
-            HKObjectType.workoutType()
+            HKObjectType.workoutType(),
+            // Routes are their own series type: without read access for it,
+            // HealthKit returns no route samples at all, even for workouts the
+            // app is otherwise allowed to read.
+            HKSeriesType.workoutRoute()
         ]
     }
 
@@ -287,11 +291,16 @@ struct HealthKitDataSource: HealthDataProviding {
         async let heartRateTask = heartRate(in: window)
         let (route, heart) = try await (routeTask, heartRateTask)
 
+        // When nothing is linked to the workout, say whether any route samples
+        // exist in its time window; that separates "no access" from "not linked".
+        let windowSamples = route.isEmpty ? try? await routeSampleCount(in: window) : nil
+
         return WorkoutDetail(
             route: route,
             averageHeartRate: heart.average,
             maximumHeartRate: heart.maximum,
-            energyKilocalories: activity.activeEnergyKilocalories
+            energyKilocalories: activity.activeEnergyKilocalories,
+            routeSamplesInWindow: windowSamples
         )
     }
 
@@ -341,6 +350,19 @@ struct HealthKitDataSource: HealthDataProviding {
             // A workout recorded without a route is normal, not an error.
             return []
         }
+    }
+
+    private func routeSampleCount(in window: DateInterval) async throws -> Int {
+        let predicate = HKQuery.predicateForSamples(
+            withStart: window.start,
+            end: window.end,
+            options: [.strictStartDate]
+        )
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workoutRoute(predicate)],
+            sortDescriptors: []
+        )
+        return try await descriptor.result(for: store).count
     }
 
     private func workout(withUUID uuid: UUID) async throws -> HKWorkout? {

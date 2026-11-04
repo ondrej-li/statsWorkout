@@ -136,6 +136,17 @@ HealthKit does **not** attach step statistics to workouts (`HKWorkout.statistics
 returns `nil`), so the *Activities* scope reads steps and distance from statistics queries scoped to
 the workout time ranges; the workout's own statistics are only a fallback when no samples come back.
 
+### Route access
+
+Workout routes are a **separate HealthKit sample type** (`HKSeriesType.workoutRoute()`). Requesting
+read access to workouts does not include them: without that type HealthKit returns no route samples
+at all, and a workout that clearly has a route in the Health app appears route-less here. The read
+set therefore includes the route type, and a workout with no route offers "Grant access to routes".
+
+When a route is missing the detail screen also reports how many route samples HealthKit returned for
+the workout's time window — 0 means "no access or no route", more than 0 means the trace exists but
+is not linked to that workout, which separates the two causes without guessing.
+
 ### Routes
 
 A workout's route is **exactly what Apple Health recorded**: the `HKWorkoutRoute` samples belonging

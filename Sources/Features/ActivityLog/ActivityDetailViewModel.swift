@@ -82,8 +82,26 @@ final class ActivityDetailViewModel {
 
     // MARK: - Loading
 
-    func load() async {
-        if case .loaded = phase { return }
+    var canRequestRouteAccess: Bool {
+        !isDemo && !detail.hasRoute
+    }
+
+    /// Re-asks HealthKit for access. Adding route read access to the app's set
+    /// makes the system sheet appear again for the new type.
+    func requestRouteAccess() async {
+        phase = .loading
+        try? await environment.healthKit.requestAuthorization()
+        await reload()
+    }
+
+    func reload() async {
+        phase = .loading
+        detail = WorkoutDetail()
+        await load(force: true)
+    }
+
+    func load(force: Bool = false) async {
+        if case .loaded = phase, !force { return }
         phase = .loading
 
         do {

@@ -22,6 +22,10 @@ struct WorkoutDetail: Sendable, Equatable {
     var averageHeartRate: Double?
     var maximumHeartRate: Double?
     var energyKilocalories: Double?
+    /// Route samples HealthKit returned for the workout's time window when the
+    /// workout-linked query found none. 0 means "no route or no access", more
+    /// than 0 means the trace exists but is not linked to this workout.
+    var routeSamplesInWindow: Int?
 
     var hasRoute: Bool { route.count >= 2 }
 }
