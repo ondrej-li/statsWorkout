@@ -132,3 +132,86 @@ struct RouteGeometryTests {
         #expect(RouteGeometry.splits(of: straightRoute(kilometres: 0.05, minutes: 1), splitLength: 1_000).isEmpty)
     }
 }
+
+@Suite("Workout naming in the app")
+@MainActor
+struct WorkoutNamingIntegrationTests {
+    private let calendar = TestSupport.calendar()
+
+    private func makeEnvironment(store: InMemoryHealthCacheStore) -> AppEnvironment {
+        let settings = AppSettings(persists: false)
+        settings.useMockData = true
+        let source = MockHealthDataSource(calendar: calendar, seed: 42)
+        return AppEnvironment(
+            settings: settings,
+            healthKit: source,
+            mock: source,
+            calendar: calendar,
+            cacheStore: store,
+            mockPlaces: MockPlaceResolver()
+        )
+    }
+
+    private func sampleActivity() -> ActivitySample {
+        let interval = DateInterval(
+            start: TestSupport.date(calendar, 2026, 10, 1),
+            end: TestSupport.date(calendar, 2026, 10, 20)
+        )
+        return MockHealthData.activities(in: interval, calendar: calendar, seed: 42, now: interval.end)
+            .first { $0.kind.isDistanceBased }!
+    }
+
+    @Test("A row starts without a place and gains one once resolved")
+    func resolvesPlace() async {
+        let store = InMemoryHealthCacheStore()
+        let environment = makeEnvironment(store: store)
+        let activity = sampleActivity()
+
+        let initial = environment.workoutTitle(for: activity)
+        #expect(!initial.contains(" around "))
+
+        await environment.resolveWorkoutPlaces(for: [activity])
+        let resolved = environment.workoutTitle(for: activity)
+
+        #expect(resolved.hasPrefix("Your "))
+        #expect(resolved.contains(" around "))
+        #expect(MockTown.all.contains { resolved.hasSuffix($0.name) })
+    }
+
+    @Test("Resolved names are cached and survive the next launch")
+    func cachesNames() async {
+        let store = InMemoryHealthCacheStore()
+        let environment = makeEnvironment(store: store)
+        let activity = sampleActivity()
+        await environment.resolveWorkoutPlaces(for: [activity])
+        let title = environment.workoutTitle(for: activity)
+
+        // A fresh environment reads the place back from the cache.
+        let relaunched = makeEnvironment(store: store)
+        await relaunched.resolveWorkoutPlaces(for: [activity])
+
+        #expect(relaunched.workoutTitle(for: activity) == title)
+    }
+
+    @Test("Places for workouts that left the cache are pruned")
+    func prunesPlaces() async {
+        let store = InMemoryHealthCacheStore()
+        let coordinator = HealthSyncCoordinator(store: store, calendar: calendar)
+        let window = DateInterval(
+            start: TestSupport.date(calendar, 2026, 10, 1),
+            end: TestSupport.date(calendar, 2026, 10, 20)
+        )
+        let source = MockHealthDataSource(calendar: calendar, seed: 42)
+
+        _ = try? await coordinator.loadSamples(
+            for: window, granularity: .day, source: source, sourceKey: "mock", now: window.end
+        )
+        let activity = sampleActivity()
+        await coordinator.setPlaceName("Brtnice", for: activity.stableID, sourceKey: "mock")
+
+        #expect(await coordinator.placeNames(sourceKey: "mock")[activity.stableID] == "Brtnice")
+
+        await coordinator.invalidate()
+        #expect(await coordinator.placeNames(sourceKey: "mock").isEmpty)
+    }
+}

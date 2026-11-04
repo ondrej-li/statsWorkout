@@ -397,29 +397,17 @@ enum MockHealthData {
             )
         }
 
-        let pointCount = 160
-        let radius = max(350, min(2_600, (activity.distanceMeters ?? 4_000) / 6.8))
-        var points: [RoutePoint] = []
-        points.reserveCapacity(pointCount)
-
-        for step in 0..<pointCount {
-            let progress = Double(step) / Double(pointCount - 1)
-            let angle = progress * 2 * .pi
-            // A slightly irregular loop, so it does not look machine-drawn.
-            let wobble = 0.82 + 0.18 * sin(angle * 3 + Double(index % 7))
-            let latitudeOffset = sin(angle) * radius / 111_000 * wobble
-            let longitudeOffset = cos(angle) * radius / (111_000 * cos(town.latitude * .pi / 180)) * wobble
-            let elevation = 420 + 40 * sin(angle * 2) + unitRandom(seed &+ index, UInt64(step)) * 8
-
-            points.append(
-                RoutePoint(
-                    latitude: town.latitude + latitudeOffset,
-                    longitude: town.longitude + longitudeOffset,
-                    altitude: elevation,
-                    time: activity.start.addingTimeInterval(activity.duration * progress)
-                )
-            )
-        }
+        // Three shapes so demo workouts do not all look like the same circle:
+        // an irregular loop, an out-and-back and a point-to-point line.
+        let shapeRoll = unitRandom(seed &+ index, 34)
+        let points = makeRoute(
+            shape: shapeRoll < 0.5 ? .loop : (shapeRoll < 0.8 ? .outAndBack : .pointToPoint),
+            town: town,
+            distanceMeters: activity.distanceMeters ?? 5_000,
+            start: activity.start,
+            duration: activity.duration,
+            noiseSeed: seed &+ index
+        )
 
         let average = 118 + unitRandom(seed &+ index, 32) * 28
         return WorkoutDetail(
@@ -428,6 +416,84 @@ enum MockHealthData {
             maximumHeartRate: average + 24 + unitRandom(seed &+ index, 33) * 12,
             energyKilocalories: activity.activeEnergyKilocalories
         )
+    }
+
+    private enum RouteShape {
+        case loop
+        case outAndBack
+        case pointToPoint
+    }
+
+    /// A plausible-looking trace for demo data: an irregular loop, an
+    /// out-and-back or a point-to-point walk, with gentle drift. Real routes
+    /// never come from here — they are read from HealthKit.
+    private static func makeRoute(
+        shape: RouteShape,
+        town: MockTown,
+        distanceMeters: Double,
+        start: Date,
+        duration: TimeInterval,
+        noiseSeed: UInt64
+    ) -> [RoutePoint] {
+        let metresPerDegreeLatitude = 111_000.0
+        let metresPerDegreeLongitude = metresPerDegreeLatitude * cos(town.latitude * .pi / 180)
+        let pointCount = 220
+        let heading = unitRandom(noiseSeed, 41) * 2 * .pi
+
+        // Rough length of the path, so the trace matches the workout distance.
+        let radius = shape == .loop
+            ? max(220, distanceMeters / (2 * .pi * 1.05))
+            : max(220, distanceMeters / 2.1)
+
+        // Smooth drift: a handful of anchors interpolated along the path, so the
+        // trace looks hand-drawn rather than noisy.
+        let anchors = (0..<9).map { unitRandom(noiseSeed &+ UInt64($0), 42) - 0.5 }
+        func drift(_ t: Double) -> Double {
+            let scaled = t * 8
+            let index = min(7, Int(scaled))
+            let fraction = scaled - Double(index)
+            let eased = fraction * fraction * (3 - 2 * fraction)
+            return anchors[index] + (anchors[index + 1] - anchors[index]) * eased
+        }
+
+        func offset(_ t: Double) -> (east: Double, north: Double) {
+            var east: Double
+            var north: Double
+
+            switch shape {
+            case .loop:
+                let angle = t * 2 * .pi
+                let r = radius * (1 + 0.14 * sin(angle * 3 + heading) + 0.05 * sin(angle * 5 + heading * 2))
+                east = cos(angle) * r
+                north = sin(angle) * r
+            case .outAndBack:
+                // Out to the turning point, then back along the same way.
+                let u = t < 0.5 ? t * 2 : (1 - t) * 2
+                let lateral = 0.14 * radius * sin(u * .pi)
+                east = u * radius * cos(heading) - lateral * sin(heading)
+                north = u * radius * sin(heading) + lateral * cos(heading)
+            case .pointToPoint:
+                let lateral = 0.11 * radius * sin(t * .pi * 1.6 + heading)
+                east = t * radius * cos(heading) - lateral * sin(heading)
+                north = t * radius * sin(heading) + lateral * cos(heading)
+            }
+
+            let wobble = radius * 0.035 * drift(t)
+            return (east + wobble * cos(heading), north + wobble * sin(heading))
+        }
+
+        return (0..<pointCount).map { step in
+            let progress = Double(step) / Double(pointCount - 1)
+            let point = offset(progress)
+            let climb = 26 * sin(progress * 5 + heading) + 3 * drift(progress)
+
+            return RoutePoint(
+                latitude: town.latitude + point.north / metresPerDegreeLatitude,
+                longitude: town.longitude + point.east / metresPerDegreeLongitude,
+                altitude: 430 + climb,
+                time: start.addingTimeInterval(duration * progress)
+            )
+        }
     }
 
     private static func dailyTotal(for day: Date, calendar: Calendar, seed: UInt64) -> Double {

@@ -31,7 +31,7 @@ final class ActivityDetailViewModel {
     }
 
     var title: String {
-        naming.title(for: activity, place: placeName)
+        environment.workoutTitle(for: activity)
     }
 
     var splits: [WorkoutSplit] {
@@ -53,8 +53,11 @@ final class ActivityDetailViewModel {
         }
 
         // Naming is a nicety: a failed geocode simply leaves it out.
-        if let centre = RouteGeometry.centroid(of: detail.route) {
-            placeName = await places.placeName(near: centre)
+        if environment.workoutPlaces[activity.stableID] == nil,
+           let centre = RouteGeometry.centroid(of: detail.route),
+           let place = await places.placeName(near: centre) {
+            placeName = place
+            await environment.rememberPlace(place, for: activity)
         }
     }
 }

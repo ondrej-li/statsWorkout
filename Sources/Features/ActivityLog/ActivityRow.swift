@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ActivityRow: View {
     let activity: ActivitySample
+    let title: String
     let formatter: MetricFormatter
 
     private var accent: Color { Theme.accent(for: .exerciseDuration) }
@@ -15,7 +16,7 @@ struct ActivityRow: View {
                 .background(accent.opacity(0.12), in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(WorkoutNaming().shortTitle(for: activity, place: nil))
+                Text(title)
                     .font(.subheadline.weight(.semibold))
                 HStack(spacing: 5) {
                     Text(activity.start.formatted(date: .omitted, time: .shortened))

@@ -18,7 +18,7 @@ struct CachedDay: Codable, Sendable, Equatable {
 /// time the app opens. Recent days are re-read on each refresh, which also
 /// picks up deletions and edits inside that window.
 struct HealthSampleCache: Codable, Sendable, Equatable {
-    static let currentVersion = 1
+    static let currentVersion = 2
     /// Older days are dropped: the cache stays small and a year view is one query.
     static let retentionDays = 400
 
@@ -32,6 +32,9 @@ struct HealthSampleCache: Codable, Sendable, Equatable {
     var lastFullSyncAt: Date?
     var days: [CachedDay] = []
     var activities: [ActivitySample] = []
+    /// Settlement name per workout (`ActivitySample.stableID`), so naming is a
+    /// one-time geocode rather than something the list repeats.
+    var places: [String: String] = [:]
 
     // MARK: - Reading
 
@@ -91,6 +94,8 @@ struct HealthSampleCache: Codable, Sendable, Equatable {
     mutating func prune(olderThan cutoff: Date) {
         days.removeAll { $0.day < cutoff }
         activities.removeAll { $0.start < cutoff }
+        let known = Set(activities.map(\.stableID))
+        places = places.filter { known.contains($0.key) }
     }
 
     private func dayEnd(_ day: Date) -> Date {

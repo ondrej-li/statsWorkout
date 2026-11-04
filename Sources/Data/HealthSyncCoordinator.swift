@@ -76,6 +76,18 @@ actor HealthSyncCoordinator {
         return cache.samples(in: window)
     }
 
+    func placeNames(sourceKey: String) async -> [String: String] {
+        await currentCache(sourceKey: sourceKey).places
+    }
+
+    func setPlaceName(_ name: String, for activityID: String, sourceKey: String) async {
+        var cache = await currentCache(sourceKey: sourceKey)
+        guard cache.places[activityID] != name else { return }
+        cache.places[activityID] = name
+        self.cache = cache
+        await store.save(cache)
+    }
+
     struct CacheInfo: Sendable, Equatable {
         var dayCount: Int
         var activityCount: Int

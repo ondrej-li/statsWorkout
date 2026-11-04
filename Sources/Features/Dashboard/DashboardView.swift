@@ -60,6 +60,9 @@ struct DashboardView: View {
             .onChange(of: environment.healthUpdates) { _, _ in
                 Task { await model.load() }
             }
+            .onChange(of: model.recentActivities) { _, activities in
+                Task { await environment.resolveWorkoutPlaces(for: activities, limit: 4) }
+            }
             .refreshable { await model.load(forceRefresh: true) }
             .onChange(of: model.periodKind) { _, kind in
                 if kind == .custom { isShowingCustomRange = true }
@@ -80,10 +83,21 @@ struct DashboardView: View {
                 Text(model.rangeTitle)
                     .font(.title3.weight(.semibold))
                     .contentTransition(.numericText())
-                if let stats = model.stats {
-                    Text(model.periodFormatter.progressCaption(for: stats))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if let stats = model.stats {
+                        Text(model.periodFormatter.progressCaption(for: stats))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if environment.settings.useMockData {
+                        Label("Demo", systemImage: "flask")
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.primary.opacity(0.07), in: Capsule())
+                            .accessibilityLabel("Showing demo data")
+                    }
                 }
             }
             Spacer()
@@ -295,7 +309,11 @@ struct DashboardView: View {
                         .padding(.vertical, 6)
                 } else {
                     ForEach(recent) { activity in
-                        ActivityRow(activity: activity, formatter: model.formatter)
+                        ActivityRow(
+                            activity: activity,
+                            title: environment.workoutTitle(for: activity),
+                            formatter: model.formatter
+                        )
                         if activity.id != recent.last?.id {
                             Divider().opacity(0.4)
                         }
