@@ -1,7 +1,7 @@
 import Foundation
 
 /// A workout read from Apple Health, normalised for the domain layer.
-struct ActivitySample: Identifiable, Hashable, Sendable {
+struct ActivitySample: Identifiable, Hashable, Codable, Sendable {
     let id: UUID
     let kind: ActivityKind
     let start: Date

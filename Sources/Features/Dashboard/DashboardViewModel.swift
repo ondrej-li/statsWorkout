@@ -133,7 +133,7 @@ final class DashboardViewModel {
 
     // MARK: - Loading
 
-    func load() async {
+    func load(forceRefresh: Bool = false) async {
         loadGeneration += 1
         let generation = loadGeneration
         let request = loadRequest
@@ -158,47 +158,19 @@ final class DashboardViewModel {
             let stepGranularity: StepGranularity = environment.periodCalendar.granularity(for: request.range) == .hour
                 ? .hour
                 : .day
-            async let activitiesTask = source.activities(in: window)
-            async let stepsTask = source.stepSamples(in: window, granularity: stepGranularity)
-            async let distanceTask = source.distanceSamples(in: window, granularity: stepGranularity)
-            async let elevationTask = source.elevationSamples(in: window, granularity: stepGranularity)
-            let (activities, steps, distance, elevation) = try await (
-                activitiesTask,
-                stepsTask,
-                distanceTask,
-                elevationTask
+
+            // The coordinator answers from the cache and re-reads only the days
+            // that changed, so switching periods stays cheap.
+            let samples = try await environment.sync.loadSamples(
+                for: window,
+                granularity: stepGranularity,
+                source: source,
+                sourceKey: environment.dataSourceKey,
+                now: environment.now(),
+                force: forceRefresh
             )
 
             guard generation == loadGeneration else { return }
-
-            // Steps and distance inside the workouts come from sample queries
-            // scoped to the workout windows: HealthKit does not attach step
-            // statistics to workouts.
-            let windows = activities.map { DateInterval(start: $0.start, end: $0.end) }
-            async let workoutStepsTask = source.workoutQuantitySamples(
-                in: window,
-                kind: .steps,
-                within: windows,
-                granularity: stepGranularity
-            )
-            async let workoutDistanceTask = source.workoutQuantitySamples(
-                in: window,
-                kind: .distance,
-                within: windows,
-                granularity: stepGranularity
-            )
-            let (workoutSteps, workoutDistance) = try await (workoutStepsTask, workoutDistanceTask)
-
-            guard generation == loadGeneration else { return }
-
-            let samples = HealthSamples(
-                activities: activities,
-                steps: steps,
-                distance: distance,
-                elevation: elevation,
-                workoutSteps: workoutSteps,
-                workoutDistance: workoutDistance
-            )
 
             let aggregated = StatsAggregator(periodCalendar: environment.periodCalendar).stats(
                 for: request.range,
@@ -220,7 +192,7 @@ final class DashboardViewModel {
                     self.selectedBucketIndex = min(max(0, index), max(0, stats.buckets.count - 1))
                 }
             }
-            self.recentActivities = activities
+            self.recentActivities = samples.activities
                 .filter { request.range.contains($0.start) }
                 .sorted { $0.start > $1.start }
             phase = .loaded
@@ -256,6 +228,7 @@ final class DashboardViewModel {
         do {
             try await environment.healthKit.requestAuthorization()
             settings.useMockData = false
+            environment.startBackgroundDelivery()
             await load()
         } catch {
             phase = .failed(error.localizedDescription)

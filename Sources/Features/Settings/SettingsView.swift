@@ -3,9 +3,11 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var isRequestingAccess = false
     @State private var authorizationMessage: String?
+    @State private var cacheInfo: HealthSyncCoordinator.CacheInfo?
 
     var body: some View {
         @Bindable var settings = environment.settings
@@ -88,10 +90,35 @@ struct SettingsView: View {
 
                 Section {
                     Toggle("Use demo data", isOn: $settings.useMockData)
+                        .onChange(of: settings.useMockData) { _, usesMock in
+                            environment.invalidateCache()
+                            if !usesMock {
+                                environment.startBackgroundDelivery()
+                            }
+                            Task { await refreshCacheInfo() }
+                        }
+
+                    LabeledContent("Offline cache") {
+                        Text(cacheInfo.map { "\($0.dayCount) days" } ?? "—")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    LabeledContent("Last sync") {
+                        Text(cacheInfo?.lastSyncedAt.map { $0.formatted(.relative(presentation: .named)) } ?? "Never")
+                            .foregroundStyle(.secondary)
+                    }
+                    Button("Clear cached samples") {
+                        environment.invalidateCache()
+                        Task {
+                            await refreshCacheInfo()
+                            authorizationMessage = "Cache cleared. It will be rebuilt on the next load."
+                        }
+                    }
+                    .disabled((cacheInfo?.dayCount ?? 0) == 0)
                 } header: {
                     Text("Data source")
                 } footer: {
-                    Text("Demo data is generated on device and is handy for previewing the dashboard in the simulator. Turn it off to use Apple Health.")
+                    Text("Demo data is generated on device and is handy for previewing the dashboard in the simulator. Daily totals are cached on this device and refreshed in the background, so a month or year view does not re-read every sample each time.")
                 }
 
                 Section {
@@ -106,7 +133,16 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .task { await refreshCacheInfo() }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task { await refreshCacheInfo() }
+            }
         }
+    }
+
+    private func refreshCacheInfo() async {
+        cacheInfo = await environment.sync.cacheInfo(sourceKey: environment.dataSourceKey)
     }
 
     private func requestAccess() async {
@@ -114,6 +150,7 @@ struct SettingsView: View {
         defer { isRequestingAccess = false }
         do {
             try await environment.healthKit.requestAuthorization()
+            environment.startBackgroundDelivery()
             authorizationMessage = "Request completed. Turn off demo data to see Apple Health values."
         } catch {
             authorizationMessage = error.localizedDescription

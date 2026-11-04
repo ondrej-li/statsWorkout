@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DashboardView: View {
     @Environment(AppEnvironment.self) private var environment
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model: DashboardViewModel
     @State private var isShowingCustomRange = false
 
@@ -45,7 +46,21 @@ struct DashboardView: View {
                 }
             }
             .task(id: model.loadRequest) { await model.load() }
-            .refreshable { await model.load() }
+            .task {
+                // HealthKit wakes the app in the background; the observers only
+                // need installing once access exists.
+                if !environment.settings.useMockData {
+                    environment.startBackgroundDelivery()
+                }
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                Task { await model.load() }
+            }
+            .onChange(of: environment.healthUpdates) { _, _ in
+                Task { await model.load() }
+            }
+            .refreshable { await model.load(forceRefresh: true) }
             .onChange(of: model.periodKind) { _, kind in
                 if kind == .custom { isShowingCustomRange = true }
             }
