@@ -33,13 +33,13 @@ struct DashboardView: View {
             }
             .scrollIndicators(.hidden)
             .background { background }
-            .navigationTitle("Stats")
+            .navigationTitle(L10n.t(.tabStats))
             // Chart shots are taken scrolled; a compact bar reads better than a
             // collapsed large title over the first card.
             .navigationBarTitleDisplayMode(ScreenshotRoute.section == nil ? .large : .inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Today") {
+                    Button(L10n.t(.actionToday)) {
                         withAnimation(.snappy) { model.goToNow() }
                     }
                     .disabled(model.isCurrentPeriod)
@@ -90,21 +90,21 @@ struct DashboardView: View {
                             .foregroundStyle(.secondary)
                     }
                     if environment.settings.useMockData {
-                        Label("Demo", systemImage: "flask")
+                        Label(L10n.t(.demoBadge), systemImage: "flask")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.primary.opacity(0.07), in: Capsule())
-                            .accessibilityLabel("Showing demo data")
+                            .accessibilityLabel(L10n.t(.demoBadgeA11y))
                     }
                 }
             }
             Spacer()
             HStack(spacing: 6) {
-                chevron("chevron.left", label: "Previous period") { model.step(by: -1) }
+                chevron("chevron.left", label: L10n.t(.actionPreviousPeriod)) { model.step(by: -1) }
                     .disabled(!model.canStepBackward)
-                chevron("chevron.right", label: "Next period") { model.step(by: 1) }
+                chevron("chevron.right", label: L10n.t(.actionNextPeriod)) { model.step(by: 1) }
                     .disabled(!model.canStepForward)
             }
         }
@@ -126,7 +126,7 @@ struct DashboardView: View {
 
     private var scopePicker: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Picker("Data source", selection: Binding(
+            Picker(L10n.t(.settingsDataSource), selection: Binding(
                 get: { model.dataScope },
                 set: { model.dataScope = $0 }
             )) {
@@ -199,7 +199,7 @@ struct DashboardView: View {
         return Card {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    SectionLabel(title: "Total \(metric.title.lowercased())")
+                    SectionLabel(title: L10n.t(.dashboardTotal, metric.title))
                     Spacer()
                     Image(systemName: metric.systemImage)
                         .font(.system(size: 13, weight: .semibold))
@@ -232,11 +232,11 @@ struct DashboardView: View {
 
                 HStack(spacing: 0) {
                     heroStat(
-                        "Average/\(model.periodFormatter.bucketNoun(for: stats))",
+                        L10n.t(.dashboardAveragePer, model.periodFormatter.bucketNoun(for: stats)),
                         formatter.tileString(stats.average(of: metric), for: metric)
                     )
-                    heroStat("Activities", "\(stats.totals.activityCount)")
-                    heroStat("Best", bestBucketCaption(stats))
+                    heroStat(L10n.t(.dashboardActivities), "\(stats.totals.activityCount)")
+                    heroStat(L10n.t(.dashboardBest), bestBucketCaption(stats))
                 }
             }
         }
@@ -294,16 +294,16 @@ struct DashboardView: View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    SectionLabel(title: "Recent activities")
+                    SectionLabel(title: L10n.t(.recentSection))
                     Spacer()
-                    Text("\(stats.totals.activityCount) in period")
+                    Text(L10n.t(.recentInPeriod, stats.totals.activityCount))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
 
                 let recent = Array(model.recentActivities.prefix(4))
                 if recent.isEmpty {
-                    Text("No workouts recorded in this period.")
+                    Text(L10n.t(.recentEmpty))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 6)
@@ -327,14 +327,12 @@ struct DashboardView: View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
                 Label(
-                    model.healthAccessUnavailable ? "Apple Health unavailable" : "Connect Apple Health",
+                    model.healthAccessUnavailable ? L10n.t(.healthUnavailableTitle) : L10n.t(.healthConnectTitle),
                     systemImage: model.healthAccessUnavailable ? "heart.slash.fill" : "heart.text.square.fill"
                 )
                 .font(.headline)
 
-                Text(model.healthAccessUnavailable
-                     ? "This device does not provide HealthKit data. Turn on demo data in Settings to explore the dashboard."
-                     : "Grant read access to your steps and workouts to see real statistics. Your data stays on this device.")
+                Text(model.healthAccessUnavailable ? L10n.t(.healthUnavailableBody) : L10n.t(.healthConnectBody))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -342,7 +340,7 @@ struct DashboardView: View {
                     Button {
                         Task { await model.requestHealthAccess() }
                     } label: {
-                        Text(model.isRequestingAuthorization ? "Requesting…" : "Allow access")
+                        Text(model.isRequestingAuthorization ? L10n.t(.actionRequesting) : L10n.t(.actionAllowAccess))
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -355,13 +353,13 @@ struct DashboardView: View {
     private func errorCard(_ message: String) -> some View {
         Card {
             VStack(alignment: .leading, spacing: 8) {
-                Label("Something went wrong", systemImage: "exclamationmark.triangle.fill")
+                Label(L10n.t(.errorTitle), systemImage: "exclamationmark.triangle.fill")
                     .font(.headline)
                     .foregroundStyle(.orange)
                 Text(message)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Button("Try again") {
+                Button(L10n.t(.actionRetry)) {
                     Task { await model.load() }
                 }
                 .buttonStyle(.bordered)
@@ -408,21 +406,21 @@ struct CustomRangeSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("From") {
-                    DatePicker("Start", selection: $start, displayedComponents: .date)
+                Section(L10n.t(.rangeFrom)) {
+                    DatePicker(L10n.t(.rangeStart), selection: $start, displayedComponents: .date)
                 }
-                Section("To") {
-                    DatePicker("End", selection: $end, in: start..., displayedComponents: .date)
+                Section(L10n.t(.rangeTo)) {
+                    DatePicker(L10n.t(.rangeEnd), selection: $end, in: start..., displayedComponents: .date)
                 }
             }
-            .navigationTitle("Custom range")
+            .navigationTitle(L10n.t(.rangeTitle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(L10n.t(.actionCancel)) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") {
+                    Button(L10n.t(.actionApply)) {
                         onApply(min(start, end), max(start, end))
                         dismiss()
                     }

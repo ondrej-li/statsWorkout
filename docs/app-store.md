@@ -89,5 +89,11 @@ placeholder.
 
 ## Localisation
 
-The app is English-only for now; the website and the App Store listing ship English (primary) and
-Czech. If the app is localised later, add `cs` to `project.yml` and a string catalog.
+The app ships ten languages: English (primary), Czech, German, Spanish, French, Italian, Portuguese,
+Japanese, Korean and Simplified Chinese. `CFBundleLocalizations` is not used — the catalogs are JSON
+files in `Resources/L10n/` read by the app's own `L10n` layer, and the language is chosen in
+Settings (or follows the device, falling back to English).
+
+App Store Connect only needs the primary language (English) for the listing; the additional app
+languages are picked up from the binary once the localized metadata is uploaded. The website and the
+listing copy remain English with a Czech translation.

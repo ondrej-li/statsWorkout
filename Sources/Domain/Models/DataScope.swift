@@ -10,15 +10,15 @@ enum DataScope: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .all: return "All data"
-        case .activities: return "Activities"
+        case .all: return L10n.t(.scopeAll)
+        case .activities: return L10n.t(.scopeActivities)
         }
     }
 
     var caption: String {
         switch self {
-        case .all: return "Continuous monitoring, including workouts"
-        case .activities: return "Only samples recorded inside workouts"
+        case .all: return L10n.t(.scopeAllCaption)
+        case .activities: return L10n.t(.scopeActivitiesCaption)
         }
     }
 }

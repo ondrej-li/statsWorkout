@@ -13,7 +13,7 @@ struct PeriodFormatter: Sendable {
     func rangeTitle(for range: PeriodRange) -> String {
         switch range.kind {
         case .last24Hours:
-            return "Last 24 hours"
+            return L10n.t(.periodLast24Hours)
         case .day:
             return text(range.start, .dateTime.weekday(.wide).day().month(.abbreviated))
         case .week:
@@ -21,10 +21,7 @@ struct PeriodFormatter: Sendable {
         case .month:
             return text(range.start, .dateTime.month(.wide).year())
         case .quarter:
-            let month = calendar.component(.month, from: range.start)
-            let quarter = ((month - 1) / 3) + 1
-            let year = calendar.component(.year, from: range.start)
-            return "Q\(quarter) \(year)"
+            return text(range.start, .dateTime.quarter(.abbreviated).year())
         case .year:
             return text(range.start, .dateTime.year())
         case .custom:
@@ -69,7 +66,7 @@ struct PeriodFormatter: Sendable {
         case .day:
             return text(bucket.start, .dateTime.weekday(.abbreviated).day().month(.abbreviated))
         case .week:
-            return "Week of " + text(bucket.start, .dateTime.day().month(.abbreviated))
+            return L10n.t(.periodBucketWeek, text(bucket.start, .dateTime.day().month(.abbreviated)))
         case .month:
             return text(bucket.start, .dateTime.month(.wide).year())
         }
@@ -91,33 +88,41 @@ struct PeriodFormatter: Sendable {
 
     /// "Day 12 of 30", "Week 5 of 13", "Month 4 of 12" or "Complete".
     func progressCaption(for stats: PeriodStats) -> String {
-        guard stats.isCurrentPeriod else { return "Complete" }
+        guard stats.isCurrentPeriod else { return L10n.t(.periodComplete) }
+        let key: L10nKey
         switch stats.granularity {
-        case .hour:
-            return "Hour \(stats.elapsedBucketCount) of \(stats.buckets.count)"
-        case .day:
-            return "Day \(stats.elapsedBucketCount) of \(stats.buckets.count)"
-        case .week:
-            return "Week \(stats.elapsedBucketCount) of \(stats.buckets.count)"
-        case .month:
-            return "Month \(stats.elapsedBucketCount) of \(stats.buckets.count)"
+        case .hour: key = .periodProgressHour
+        case .day: key = .periodProgressDay
+        case .week: key = .periodProgressWeek
+        case .month: key = .periodProgressMonth
         }
+        return L10n.t(key, stats.elapsedBucketCount, stats.buckets.count)
     }
 
     /// Noun for one bucket, e.g. "hour", used in labels like "Average per hour".
     func bucketNoun(for stats: PeriodStats) -> String {
         switch stats.granularity {
-        case .hour: return "hour"
-        case .day: return "day"
-        case .week: return "week"
-        case .month: return "month"
+        case .hour: return L10n.t(.bucketHour)
+        case .day: return L10n.t(.bucketDay)
+        case .week: return L10n.t(.bucketWeek)
+        case .month: return L10n.t(.bucketMonth)
         }
     }
 
+    /// Full phrase, e.g. "vs previous period".
     func comparisonCaption(for stats: PeriodStats) -> String {
         switch stats.comparisonMode {
-        case .previousPeriod: return "vs previous period"
-        case .samePeriodLastYear: return "vs same period last year"
+        case .previousPeriod: return L10n.t(.comparisonCaptionPrevious)
+        case .samePeriodLastYear: return L10n.t(.comparisonCaptionLastYear)
+        }
+    }
+
+    /// Just the baseline, for sentences that already carry the preposition:
+    /// "Running total against last year".
+    func comparisonBaseline(for stats: PeriodStats) -> String {
+        switch stats.comparisonMode {
+        case .previousPeriod: return L10n.t(.comparisonBaselinePrevious)
+        case .samePeriodLastYear: return L10n.t(.comparisonBaselineLastYear)
         }
     }
 

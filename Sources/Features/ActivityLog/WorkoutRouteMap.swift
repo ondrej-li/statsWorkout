@@ -36,7 +36,7 @@ struct WorkoutRouteMap: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.06))
         }
-        .accessibilityLabel("Workout route map")
+        .accessibilityLabel(L10n.t(.detailMapAccessibility))
     }
 
     private var routeLengthBetweenStartAndFinish: Double {

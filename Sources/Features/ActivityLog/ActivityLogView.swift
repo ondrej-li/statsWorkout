@@ -58,7 +58,7 @@ struct ActivityLogView: View {
                 switch model.phase {
                 case .failed(let message):
                     ContentUnavailableView(
-                        "Couldn't load activities",
+                        L10n.t(.logErrorTitle),
                         systemImage: "exclamationmark.triangle",
                         description: Text(message)
                     )
@@ -66,15 +66,15 @@ struct ActivityLogView: View {
                     ProgressView().controlSize(.large)
                 case .loaded where model.days.isEmpty:
                     ContentUnavailableView(
-                        "No activities yet",
+                        L10n.t(.logEmptyTitle),
                         systemImage: "figure.run.circle",
-                        description: Text("Workouts recorded in Apple Health for the last six months show up here.")
+                        description: Text(L10n.t(.logEmptyBody))
                     )
                 default:
                     list
                 }
             }
-            .navigationTitle("Activities")
+            .navigationTitle(L10n.t(.logTitle))
             .navigationDestination(for: ActivitySample.self) { activity in
                 ActivityDetailView(activity: activity, environment: environment)
             }
@@ -98,7 +98,7 @@ struct ActivityLogView: View {
     private var list: some View {
         List {
             ForEach(model.days) { day in
-                Section(day.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated))) {
+                Section(day.date.formatted(.dateTime.weekday(.wide).day().month(.abbreviated).locale(environment.locale))) {
                     ForEach(day.activities) { activity in
                         NavigationLink(value: activity) {
                             ActivityRow(
@@ -122,7 +122,7 @@ struct ActivityLogView: View {
     /// Demo workouts are generated on device; say so, so a synthetic route is
     /// never mistaken for a recorded one.
     private var demoFooter: some View {
-        Label("Sample workouts generated on this device", systemImage: "flask")
+        Label(L10n.t(.demoLogFooter), systemImage: "flask")
             .font(.caption2)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity)

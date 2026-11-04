@@ -48,6 +48,7 @@ final class ActivityDetailViewModel {
     var formatter: MetricFormatter { environment.formatter }
     var distanceUnit: DistanceUnit { environment.settings.distanceUnit }
     var calendar: Calendar { environment.calendar }
+    var locale: Locale { environment.locale }
 
     var title: String { environment.workoutTitle(for: activity) }
 
@@ -77,7 +78,8 @@ final class ActivityDetailViewModel {
     /// Time span of the recorded trace, for the route details disclosure.
     var traceTimeRange: String? {
         guard let first = detail.route.first?.time, let last = detail.route.last?.time else { return nil }
-        return "\(first.formatted(date: .omitted, time: .shortened)) – \(last.formatted(date: .omitted, time: .shortened))"
+        let style = Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)
+        return "\(first.formatted(style)) – \(last.formatted(style))"
     }
 
     // MARK: - Loading

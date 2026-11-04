@@ -38,7 +38,7 @@ struct ActivityDetailView: View {
     /// Demo workouts invent their numbers and route; say so up front rather
     /// than leaving it to a caption under the map.
     private var demoBanner: some View {
-        Label("Demo data — this workout is generated on this device, not recorded by Apple Health", systemImage: "flask.fill")
+        Label(L10n.t(.demoBanner), systemImage: "flask.fill")
             .font(.caption)
             .foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,14 +78,14 @@ struct ActivityDetailView: View {
 
     private var dayTitle: String {
         model.activity.start.formatted(
-            .dateTime.weekday(.wide).day().month(.wide).year()
-                .locale(model.calendar.locale ?? .autoupdatingCurrent)
+            .dateTime.weekday(.wide).day().month(.wide).year().locale(model.locale)
         )
     }
 
     private var timeRange: String {
-        let start = model.activity.start.formatted(date: .omitted, time: .shortened)
-        let end = model.activity.end.formatted(date: .omitted, time: .shortened)
+        let style = Date.FormatStyle(date: .omitted, time: .shortened).locale(model.locale)
+        let start = model.activity.start.formatted(style)
+        let end = model.activity.end.formatted(style)
         return "\(start) – \(end)"
     }
 
@@ -102,7 +102,7 @@ struct ActivityDetailView: View {
         case .demo:
             VStack(alignment: .leading, spacing: 6) {
                 WorkoutRouteMap(route: model.detail.route)
-                Label("Sample route — demo data", systemImage: "flask")
+                Label(L10n.t(.detailRouteDemo), systemImage: "flask")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 routeDetails
@@ -110,7 +110,7 @@ struct ActivityDetailView: View {
         case .recorded:
             VStack(alignment: .leading, spacing: 6) {
                 WorkoutRouteMap(route: model.detail.route)
-                Label("Recorded by Apple Health", systemImage: "checkmark.seal")
+                Label(L10n.t(.detailRouteRecorded), systemImage: "checkmark.seal")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 routeDetails
@@ -118,26 +118,26 @@ struct ActivityDetailView: View {
         case .notRecorded:
             Card {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("No route from Apple Health for this workout", systemImage: "map")
+                    Label(L10n.t(.detailRouteNoneTitle), systemImage: "map")
                         .font(.subheadline.weight(.semibold))
-                    Text("Routes are a separate Health permission. If the Health app shows a route for this workout, grant access to Workout Routes and reload.")
+                    Text(L10n.t(.detailRouteNoneBody))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     if let count = model.detail.routeSamplesInWindow {
                         Text(count == 0
-                             ? "HealthKit returned no route samples for this time window."
-                             : "HealthKit returned \(count) route sample(s) that are not linked to this workout.")
+                             ? L10n.t(.detailRouteNoneZero)
+                             : L10n.t(.detailRouteNoneUnlinked, count))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
                     HStack(spacing: 10) {
-                        Button("Grant access to routes") {
+                        Button(L10n.t(.detailRouteGrant)) {
                             Task { await model.requestRouteAccess() }
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.small)
-                        Button("Reload") {
+                        Button(L10n.t(.actionReload)) {
                             Task { await model.reload() }
                         }
                         .buttonStyle(.bordered)
@@ -149,18 +149,21 @@ struct ActivityDetailView: View {
     }
 
     private var routeDetails: some View {
-        DisclosureGroup("Route details") {
+        DisclosureGroup(L10n.t(.detailRouteDetails)) {
             VStack(alignment: .leading, spacing: 6) {
-                detailRow("Source", model.isDemo ? "Demo generator" : "Apple Health")
+                detailRow(L10n.t(.detailRouteSource), model.isDemo ? L10n.t(.demoRouteSource) : L10n.t(.settingsHealth))
                 if case let .recorded(points) = model.provenance {
-                    detailRow("Recorded points", "\(points)")
+                    detailRow(L10n.t(.detailRoutePoints), points.formatted(.number.locale(model.locale)))
                 }
                 if let range = model.traceTimeRange {
-                    detailRow("Trace time", range)
+                    detailRow(L10n.t(.detailRouteTraceTime), range)
                 }
-                detailRow("Workout", model.activity.start.formatted(date: .abbreviated, time: .shortened))
+                detailRow(
+                    L10n.t(.detailRouteWorkout),
+                    model.activity.start.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(model.locale))
+                )
                 if let count = model.detail.routeSamplesInWindow {
-                    detailRow("Routes in window", "\(count)")
+                    detailRow(L10n.t(.detailRouteRoutesInWindow), count.formatted(.number.locale(model.locale)))
                 }
             }
             .padding(.top, 6)
@@ -182,29 +185,33 @@ struct ActivityDetailView: View {
     private var metrics: some View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
-                SectionLabel(title: "Details")
+                SectionLabel(title: L10n.t(.detailSection))
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                    metric("Duration", model.formatter.duration(minutes: model.activity.duration / 60), "timer")
+                    metric(L10n.t(.detailDuration), model.formatter.duration(minutes: model.activity.duration / 60), "timer")
                     if let distance = model.activity.distanceMeters, distance > 0 {
-                        metric("Distance", model.formatter.string(distance, for: .distance), "point.topleft.down.to.point.bottomright.curvepath")
+                        metric(L10n.t(.detailDistance), model.formatter.string(distance, for: .distance), "point.topleft.down.to.point.bottomright.curvepath")
                         if let pace = averagePace {
-                            metric("Avg pace", pace, "speedometer")
+                            metric(L10n.t(.detailAveragePace), pace, "speedometer")
                         }
                     }
                     if let elevation = model.activity.elevationGainMeters, elevation > 0 {
-                        metric("Elevation gain", model.formatter.string(elevation, for: .elevationGain), "mountain.2")
+                        metric(L10n.t(.detailElevation), model.formatter.string(elevation, for: .elevationGain), "mountain.2")
                     }
                     if let steps = model.activity.stepCount, steps > 0 {
-                        metric("Steps", model.formatter.heroString(steps, for: .steps), "shoeprints.fill")
+                        metric(L10n.t(.detailSteps), model.formatter.heroString(steps, for: .steps), "shoeprints.fill")
                     }
                     if let energy = model.detail.energyKilocalories ?? model.activity.activeEnergyKilocalories, energy > 0 {
-                        metric("Active energy", "\(Int(energy.rounded())) kcal", "flame")
+                        metric(
+                            L10n.t(.detailEnergy),
+                            L10n.t(.valueWithUnit, "\(Int(energy.rounded()))", L10n.t(.unitKcal)),
+                            "flame"
+                        )
                     }
                     if let heart = model.detail.averageHeartRate {
-                        metric("Avg heart rate", model.formatter.heartRate(heart), "heart")
+                        metric(L10n.t(.detailAverageHeartRate), model.formatter.heartRate(heart), "heart")
                     }
                     if let heart = model.detail.maximumHeartRate {
-                        metric("Max heart rate", model.formatter.heartRate(heart), "heart.circle")
+                        metric(L10n.t(.detailMaxHeartRate), model.formatter.heartRate(heart), "heart.circle")
                     }
                 }
             }
@@ -244,7 +251,7 @@ struct ActivityDetailView: View {
     private var splitsCard: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
-                SectionLabel(title: "Splits")
+                SectionLabel(title: L10n.t(.detailSplits))
                 ForEach(model.splits) { split in
                     HStack(spacing: 10) {
                         Text(model.formatter.splitDistance(split.distance, unit: model.distanceUnit))

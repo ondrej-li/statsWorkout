@@ -37,8 +37,14 @@ route, splits and statistics.
   the location.
 - **Background updates** — HealthKit background delivery plus an on-device cache of daily totals, so
   the app is current when it opens and a month or year view does not re-read years of samples.
-- **Settings** — distance (km/mi) and elevation (m/ft) units, default period, comparison baseline,
-  cache status and a clear-cache action.
+- **Ten languages** — English, Czech, German, Spanish, French, Italian, Portuguese, Japanese,
+  Korean and Simplified Chinese. Either follow the device (unsupported languages fall back to
+  English) or pick one in Settings; the choice is applied on the next launch. Everything is
+  translated, including workout names, which are rebuilt from per-language sentence templates so
+  word order and prepositions are right ("Your morning walk around Brtnice", "ranní procházka –
+  Brtnice", "Brtnice周辺の朝のウォーキング").
+- **Settings** — distance (km/mi) and elevation (m/ft) units, language, default period, comparison
+  baseline, cache status and a clear-cache action.
 - **Demo data** — a deterministic generator (including plausible-looking routes around Vysočina
   towns) makes the app fully usable in the simulator without any Health data; on by default in
   simulator builds. Demo mode is always labelled — a "Demo" chip on the dashboard, a footer in the
@@ -185,11 +191,34 @@ the rest of the screen.
 
 Time of day: night 22–05, morning 05–12, afternoon 12–17, evening 17–22.
 
+The sentence itself lives in the language catalogs (`naming.title` with `%1$@` time of day,
+`%2$@` activity noun, `%3$@` place), so each language can order it its own way instead of having
+an English pattern glued together.
+
+### Localisation
+
+Strings live in `Resources/L10n/<code>.json` and are read by a small typed layer:
+
+- `L10nKey` — every key as a `L10nKey` case, so a typo fails to compile instead of showing a raw
+  key at runtime.
+- `AppLanguage` — the ten languages, their plural rules and the device-resolution rule
+  (`system` → best match for `Locale.preferredLanguages` → English).
+- `L10n` — one thread-safe loader that caches a table per language and falls back to English, then
+  to the key.
+
+The active language is read at launch in `StatsWorkoutApp.init`, before the first string is built,
+and `AppEnvironment.locale` hands the same locale to the formatters, so dates, numbers and lists
+match the chosen language rather than the device. Tests can render a language without touching the
+running app via `L10n.$languageOverride.withValue(...)`.
+
+`Tests/LocalizationTests.swift` fails if a catalog is missing a key, has an empty value, or drops a
+`%1$@`-style placeholder that English uses.
+
 ### Project layout
 
 ```
 Sources/
-  App/          app entry point, dependency container, settings, screenshot routes
+  App/          app entry point, dependency container, settings, screenshot routes, localisation
   Domain/       models, period calendar, aggregation, route geometry, naming, formatters
   Data/         HealthKit + mock sources, workout mapping, sync coordinator, cache, places
   Features/     Dashboard, ActivityLog (list + detail + map), Settings
@@ -212,9 +241,10 @@ adding or deleting source files.
 make test
 ```
 
-62 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
+78 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
 both data scopes, partial-period comparison, unit formatting, the sample cache and refresh planning,
-route geometry and splits, and workout naming. Chart cards, the map and the detail screen ship with
+route geometry and splits, workout naming, and the language catalogs (completeness, placeholders,
+plural forms and word order). Chart cards, the map and the detail screen ship with
 `#Preview`s backed by the mock data source, so visual work does not need a device.
 
 CI runs the same build and test on every pull request (see `.github/workflows/ci.yml`).
@@ -228,7 +258,7 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 
 - Widgets and Live Activity summaries
 - Goal setting and rings
-- Localisation (string catalogs are enabled, the app is English-only for now)
+- Right-to-left languages (the catalogs are ready for them)
 - Exporting a period as CSV
 
 ## Screenshots and artwork

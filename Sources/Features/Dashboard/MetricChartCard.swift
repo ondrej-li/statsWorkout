@@ -29,8 +29,8 @@ struct MetricChartCard: View {
                 } else {
                     EmptyStateView(
                         systemImage: metric.systemImage,
-                        title: "Nothing here yet",
-                        message: "No \(metric.title.lowercased()) recorded in this period."
+                        title: L10n.t(.chartEmptyTitle),
+                        message: L10n.t(.chartEmptyMessage)
                     )
                 }
             }
@@ -49,7 +49,7 @@ struct MetricChartCard: View {
     private var header: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 3) {
-                SectionLabel(title: "\(metric.title) by \(granularityTitle)")
+                SectionLabel(title: L10n.t(.chartSection, metric.title, granularityTitle))
                 Text(unitCaption)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -58,17 +58,17 @@ struct MetricChartCard: View {
             Spacer()
 
             HStack(spacing: 6) {
-                zoomButton("minus.magnifyingglass", label: "Zoom out") {
+                zoomButton("minus.magnifyingglass", label: L10n.t(.chartZoomOut)) {
                     setVisibleCount(Int((Double(visibleCount) * 0.65).rounded()))
                 }
                 .disabled(visibleCount <= minVisible)
 
-                zoomButton("plus.magnifyingglass", label: "Zoom in") {
+                zoomButton("plus.magnifyingglass", label: L10n.t(.chartZoomIn)) {
                     setVisibleCount(Int((Double(visibleCount) / 0.65).rounded()))
                 }
                 .disabled(visibleCount >= bucketCount)
 
-                zoomButton("arrow.counterclockwise", label: "Reset zoom") {
+                zoomButton("arrow.counterclockwise", label: L10n.t(.chartZoomReset)) {
                     setVisibleCount(bucketCount)
                     scrollX = 0
                 }
@@ -156,7 +156,7 @@ struct MetricChartCard: View {
             }
         }
         .simultaneousGesture(pinchToZoom)
-        .accessibilityLabel("\(metric.title) chart, \(periodFormatter.rangeTitle(for: stats.range))")
+        .accessibilityLabel(L10n.t(.chartA11y, metric.title, periodFormatter.rangeTitle(for: stats.range)))
         .accessibilityValue(accessibilityValue)
     }
 
@@ -200,7 +200,7 @@ struct MetricChartCard: View {
         HStack(spacing: 6) {
             Image(systemName: isZoomed ? "arrow.left.and.right" : "hand.draw")
                 .font(.caption2)
-            Text(isZoomed ? "Drag to pan · pinch to zoom · tap for values" : "Pinch to zoom · tap a bar for details")
+            Text(isZoomed ? L10n.t(.chartHintPanned) : L10n.t(.chartHint))
                 .font(.caption2)
             Spacer(minLength: 0)
             if isZoomed {
@@ -216,17 +216,12 @@ struct MetricChartCard: View {
     // MARK: - Helpers
 
     private var granularityTitle: String {
-        switch stats.granularity {
-        case .hour: return "hour"
-        case .day: return "day"
-        case .week: return "week"
-        case .month: return "month"
-        }
+        periodFormatter.bucketNoun(for: stats)
     }
 
     private var unitCaption: String {
         let average = formatter.tileString(stats.average(of: metric), for: metric)
-        return "Average \(average) per \(granularityTitle)"
+        return L10n.t(.chartAveragePer, average, granularityTitle)
     }
 
     private func plotValue(_ item: BucketStats) -> Double {
@@ -263,9 +258,13 @@ struct MetricChartCard: View {
 
     private var accessibilityValue: String {
         guard let selection, let item = stats.buckets.first(where: { $0.bucket.index == selection }) else {
-            return "Total \(formatter.string(stats.totals.value(for: metric), for: metric))"
+            return L10n.t(.dashboardTotal, formatter.string(stats.totals.value(for: metric), for: metric))
         }
-        return "\(periodFormatter.bucketTitle(for: item.bucket, in: stats)): \(formatter.string(item.totals.value(for: metric), for: metric))"
+        return L10n.t(
+            .valueA11y,
+            periodFormatter.bucketTitle(for: item.bucket, in: stats),
+            formatter.string(item.totals.value(for: metric), for: metric)
+        )
     }
 }
 

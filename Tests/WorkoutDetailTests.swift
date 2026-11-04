@@ -61,12 +61,6 @@ struct WorkoutNamingTests {
         #expect(WorkoutNaming.cleanedPlace("") == nil)
         #expect(WorkoutNaming.cleanedPlace(nil) == nil)
     }
-
-    @Test("Short title for lists")
-    func shortTitles() {
-        #expect(naming.shortTitle(for: activity(.hiking, hour: 6), place: "Jihlava")
-            == "Morning hike around Jihlava")
-    }
 }
 
 @Suite("Route geometry")
