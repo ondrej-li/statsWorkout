@@ -1,6 +1,18 @@
 import Foundation
+import HealthKit
 import Testing
 @testable import StatsWorkout
+
+@Suite("Health access")
+struct HealthReadTypesTests {
+    @Test("Route access is requested alongside workouts")
+    func requestsWorkoutRouteAccess() {
+        // Without this type HealthKit returns no routes at all, even for
+        // workouts the app may read - the map then says "no route recorded".
+        #expect(HealthKitDataSource.readTypes.contains(HKSeriesType.workoutRoute()))
+        #expect(HealthKitDataSource.readTypes.contains(HKObjectType.workoutType()))
+    }
+}
 
 @Suite("Workout naming")
 struct WorkoutNamingTests {

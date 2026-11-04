@@ -117,9 +117,33 @@ struct ActivityDetailView: View {
             }
         case .notRecorded:
             Card {
-                Label("No route recorded by Apple Health for this workout", systemImage: "map")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("No route from Apple Health for this workout", systemImage: "map")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Routes are a separate Health permission. If the Health app shows a route for this workout, grant access to Workout Routes and reload.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let count = model.detail.routeSamplesInWindow {
+                        Text(count == 0
+                             ? "HealthKit returned no route samples for this time window."
+                             : "HealthKit returned \(count) route sample(s) that are not linked to this workout.")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                    HStack(spacing: 10) {
+                        Button("Grant access to routes") {
+                            Task { await model.requestRouteAccess() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        Button("Reload") {
+                            Task { await model.reload() }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
             }
         }
     }
@@ -135,6 +159,9 @@ struct ActivityDetailView: View {
                     detailRow("Trace time", range)
                 }
                 detailRow("Workout", model.activity.start.formatted(date: .abbreviated, time: .shortened))
+                if let count = model.detail.routeSamplesInWindow {
+                    detailRow("Routes in window", "\(count)")
+                }
             }
             .padding(.top, 6)
         }
