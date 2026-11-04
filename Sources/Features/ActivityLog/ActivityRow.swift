@@ -6,6 +6,7 @@ struct ActivityRow: View {
     let formatter: MetricFormatter
 
     private var accent: Color { Theme.accent(for: .exerciseDuration) }
+    private var locale: Locale { L10n.shared.locale }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -19,7 +20,7 @@ struct ActivityRow: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                 HStack(spacing: 5) {
-                    Text(activity.start.formatted(date: .omitted, time: .shortened))
+                    Text(activity.start.formatted(.dateTime.hour().minute().locale(locale)))
                     Text("·")
                     Text(formatter.duration(minutes: activity.duration / 60))
                     if let distance = activity.distanceMeters, distance > 0 {

@@ -36,8 +36,8 @@ struct CumulativeChartCard: View {
                 } else {
                     EmptyStateView(
                         systemImage: "chart.line.uptrend.xyaxis",
-                        title: "No progress to show",
-                        message: "There is no \(metric.title.lowercased()) data for this period yet."
+                        title: L10n.t(.progressEmptyTitle),
+                        message: L10n.t(.progressEmptyMessage)
                     )
                 }
             }
@@ -46,8 +46,8 @@ struct CumulativeChartCard: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 3) {
-            SectionLabel(title: "Progress over time")
-            Text("Running total against \(periodFormatter.comparisonCaption(for: stats).replacingOccurrences(of: "vs ", with: ""))")
+            SectionLabel(title: L10n.t(.progressSection))
+            Text(L10n.t(.progressCaption, periodFormatter.comparisonBaseline(for: stats)))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -125,13 +125,19 @@ struct CumulativeChartCard: View {
                 }
             }
         }
-        .accessibilityLabel("Cumulative \(metric.title.lowercased()) chart")
+        .accessibilityLabel(L10n.t(.progressChartA11y, metric.title))
     }
 
     private var legend: some View {
         HStack(spacing: 14) {
-            legendItem(color: Theme.accent(for: metric), dashed: false, title: "This period")
-            legendItem(color: .secondary, dashed: true, title: stats.comparisonMode == .previousPeriod ? "Previous period" : "Last year")
+            legendItem(color: Theme.accent(for: metric), dashed: false, title: L10n.t(.progressThisPeriod))
+            legendItem(
+                color: .secondary,
+                dashed: true,
+                title: stats.comparisonMode == .previousPeriod
+                    ? L10n.t(.progressPreviousPeriod)
+                    : L10n.t(.progressLastYear)
+            )
             Spacer(minLength: 0)
         }
     }

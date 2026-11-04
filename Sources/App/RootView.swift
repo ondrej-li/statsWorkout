@@ -6,13 +6,13 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            Tab("Stats", systemImage: "chart.bar.xaxis", value: .stats) {
+            Tab(L10n.t(.tabStats), systemImage: "chart.bar.xaxis", value: .stats) {
                 DashboardView(environment: environment)
             }
-            Tab("Activities", systemImage: "figure.run", value: .activities) {
+            Tab(L10n.t(.tabActivities), systemImage: "figure.run", value: .activities) {
                 ActivityLogView()
             }
-            Tab("Settings", systemImage: "gearshape", value: .settings) {
+            Tab(L10n.t(.tabSettings), systemImage: "gearshape", value: .settings) {
                 SettingsView()
             }
         }

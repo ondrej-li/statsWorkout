@@ -12,21 +12,21 @@ enum Metric: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .steps: return "Steps"
-        case .distance: return "Distance"
-        case .elevationGain: return "Elevation"
-        case .exerciseDuration: return "Exercise"
-        case .activityCount: return "Activities"
+        case .steps: return L10n.t(.metricSteps)
+        case .distance: return L10n.t(.metricDistance)
+        case .elevationGain: return L10n.t(.metricElevation)
+        case .exerciseDuration: return L10n.t(.metricExercise)
+        case .activityCount: return L10n.t(.metricActivities)
         }
     }
 
     var subtitle: String {
         switch self {
-        case .steps: return "All-day steps"
-        case .distance: return "Covered in workouts"
-        case .elevationGain: return "Climbed in workouts"
-        case .exerciseDuration: return "Time exercising"
-        case .activityCount: return "Workouts recorded"
+        case .steps: return L10n.t(.metricStepsSubtitle)
+        case .distance: return L10n.t(.metricDistanceSubtitle)
+        case .elevationGain: return L10n.t(.metricElevationSubtitle)
+        case .exerciseDuration: return L10n.t(.metricExerciseSubtitle)
+        case .activityCount: return L10n.t(.metricActivitiesSubtitle)
         }
     }
 

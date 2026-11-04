@@ -8,8 +8,8 @@ enum DistanceUnit: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .kilometers: return "Kilometers"
-        case .miles: return "Miles"
+        case .kilometers: return L10n.t(.unitDistanceKilometers)
+        case .miles: return L10n.t(.unitDistanceMiles)
         }
     }
 
@@ -36,8 +36,8 @@ enum ElevationUnit: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .meters: return "Meters"
-        case .feet: return "Feet"
+        case .meters: return L10n.t(.unitElevationMeters)
+        case .feet: return L10n.t(.unitElevationFeet)
         }
     }
 

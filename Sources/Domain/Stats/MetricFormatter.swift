@@ -72,9 +72,9 @@ struct MetricFormatter: Sendable {
             return integer(plotValue)
         case .exerciseDuration:
             if plotValue >= 1 {
-                return integer(plotValue.rounded()) + "h"
+                return L10n.t(.durationHours, Int(plotValue.rounded()))
             }
-            return integer((plotValue * 60).rounded()) + "m"
+            return L10n.t(.durationMinutes, Int((plotValue * 60).rounded()))
         }
     }
 
@@ -94,8 +94,8 @@ struct MetricFormatter: Sendable {
 
     func heroUnit(for metric: Metric) -> String? {
         switch metric {
-        case .steps: return "steps"
-        case .activityCount: return "activities"
+        case .steps: return L10n.t(.unitSteps)
+        case .activityCount: return L10n.t(.unitActivities)
         case .distance: return units.distanceUnit.symbol
         case .elevationGain: return units.elevationUnit.symbol
         case .exerciseDuration: return nil
@@ -110,9 +110,9 @@ struct MetricFormatter: Sendable {
         case .activityCount:
             return integer(raw)
         case .distance:
-            return decimal(units.distanceUnit.value(fromMeters: raw), digits: 1) + " " + units.distanceUnit.symbol
+            return withUnit(decimal(units.distanceUnit.value(fromMeters: raw), digits: 1), units.distanceUnit.symbol)
         case .elevationGain:
-            return integer(units.elevationUnit.value(fromMeters: raw)) + " " + units.elevationUnit.symbol
+            return withUnit(integer(units.elevationUnit.value(fromMeters: raw)), units.elevationUnit.symbol)
         case .exerciseDuration:
             return stringForDuration(raw, style: .full)
         }
@@ -123,19 +123,19 @@ struct MetricFormatter: Sendable {
         let total = max(0, secondsPerUnit)
         let minutes = Int(total) / 60
         let seconds = Int(total) % 60
-        return String(format: "%d:%02d /%@", minutes, seconds, unit.symbol)
+        return L10n.t(.paceValue, minutes, seconds, unit.symbol)
     }
 
     func heartRate(_ beatsPerMinute: Double) -> String {
-        integer(beatsPerMinute.rounded()) + " bpm"
+        withUnit(integer(beatsPerMinute.rounded()), L10n.t(.unitBpm))
     }
 
     /// "1 km" or "1 mi", plus "0.6 km" for a partial split.
     func splitDistance(_ value: Double, unit: DistanceUnit) -> String {
         if abs(value - 1) < 0.02 {
-            return "1 \(unit.symbol)"
+            return withUnit("1", unit.symbol)
         }
-        return decimal(value, digits: 1) + " " + unit.symbol
+        return withUnit(decimal(value, digits: 1), unit.symbol)
     }
 
     func duration(minutes: Double) -> String {
@@ -146,16 +146,14 @@ struct MetricFormatter: Sendable {
 
     private func stringForSteps(_ value: Double, style: Style) -> String {
         switch style {
-        case .full: return integer(value) + " steps"
+        case .full: return L10n.t(.valueSteps, integer(value))
         case .compact: return compactNumber(value)
         case .axis: return compactNumber(value)
         }
     }
 
     private func stringForCount(_ value: Double) -> String {
-        let count = Int(value.rounded())
-        let noun = count == 1 ? "activity" : "activities"
-        return "\(integer(value)) \(noun)"
+        L10n.count(.countActivityOne, .countActivityFew, .countActivityOther, Int(value.rounded()))
     }
 
     private func stringForDistance(_ meters: Double, style: Style) -> String {
@@ -164,7 +162,7 @@ struct MetricFormatter: Sendable {
         switch style {
         case .full:
             let digits = value < 10 && value > 0 ? 2 : 1
-            return "\(decimal(value, digits: digits)) \(symbol)"
+            return withUnit(decimal(value, digits: digits), symbol)
         case .compact:
             return decimal(value, digits: 1)
         case .axis:
@@ -176,7 +174,7 @@ struct MetricFormatter: Sendable {
         let value = units.elevationUnit.value(fromMeters: meters)
         let symbol = units.elevationUnit.symbol
         switch style {
-        case .full: return "\(integer(value)) \(symbol)"
+        case .full: return withUnit(integer(value), symbol)
         case .compact: return integer(value)
         case .axis: return integer(value)
         }
@@ -187,18 +185,14 @@ struct MetricFormatter: Sendable {
         let hours = totalMinutes / 60
         let minutes = totalMinutes % 60
 
-        switch style {
-        case .full:
-            if hours == 0 { return "\(minutes)m" }
-            if minutes == 0 { return "\(hours)h" }
-            return "\(hours)h \(minutes)m"
-        case .compact:
-            if hours == 0 { return "\(minutes)m" }
-            if minutes == 0 { return "\(hours)h" }
-            return "\(hours)h \(minutes)m"
-        case .axis:
-            return hours > 0 ? "\(hours)h" : "\(minutes)m"
-        }
+        if hours == 0 { return L10n.t(.durationMinutes, minutes) }
+        if minutes == 0 || style == .axis { return L10n.t(.durationHours, hours) }
+        return L10n.t(.durationHoursMinutes, hours, minutes)
+    }
+
+    /// "12.4 km"; the separator is a catalog string so CJK keeps its own order.
+    private func withUnit(_ value: String, _ symbol: String) -> String {
+        L10n.t(.valueWithUnit, value, symbol)
     }
 
     private func integer(_ value: Double) -> String {

@@ -57,14 +57,14 @@ enum ActivityKind: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .running: return "Run"
-        case .walking: return "Walk"
-        case .cycling: return "Ride"
-        case .hiking: return "Hike"
-        case .swimming: return "Swim"
-        case .strength: return "Strength"
-        case .yoga: return "Yoga"
-        case .other: return "Workout"
+        case .running: return L10n.t(.kindRun)
+        case .walking: return L10n.t(.kindWalk)
+        case .cycling: return L10n.t(.kindRide)
+        case .hiking: return L10n.t(.kindHike)
+        case .swimming: return L10n.t(.kindSwim)
+        case .strength: return L10n.t(.kindStrength)
+        case .yoga: return L10n.t(.kindYoga)
+        case .other: return L10n.t(.kindWorkout)
         }
     }
 

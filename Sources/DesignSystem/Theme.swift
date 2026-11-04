@@ -63,7 +63,7 @@ struct DeltaPill: View {
             HStack(spacing: 3) {
                 Image(systemName: symbol)
                     .font(.system(size: 9, weight: .heavy))
-                Text(delta.formatted(.percent.precision(.fractionLength(0)).sign(strategy: .never)))
+                Text(delta.formatted(.percent.precision(.fractionLength(0)).sign(strategy: .never).locale(L10n.shared.locale)))
                     .font(.caption2.weight(.bold))
                     .monospacedDigit()
             }
@@ -72,13 +72,19 @@ struct DeltaPill: View {
             .padding(.vertical, 3)
             .background(color.opacity(0.14), in: Capsule())
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(isFlat ? "No change" : (isPositive ? "Up \(Int((delta * 100).rounded())) percent" : "Down \(Int((-delta * 100).rounded())) percent"))
+            .accessibilityLabel(deltaDescription(delta, isFlat: isFlat, isPositive: isPositive))
         } else {
             Text("—")
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(.tertiary)
-                .accessibilityLabel("No comparison data")
+                .accessibilityLabel(L10n.t(.comparisonNone))
         }
+    }
+
+    private func deltaDescription(_ delta: Double, isFlat: Bool, isPositive: Bool) -> String {
+        if isFlat { return L10n.t(.comparisonFlat) }
+        let percent = Int((abs(delta) * 100).rounded())
+        return isPositive ? L10n.t(.comparisonUp, percent) : L10n.t(.comparisonDown, percent)
     }
 }
 

@@ -14,13 +14,13 @@ enum PeriodKind: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .last24Hours: return "24h"
-        case .day: return "Day"
-        case .week: return "Week"
-        case .month: return "Month"
-        case .quarter: return "Quarter"
-        case .year: return "Year"
-        case .custom: return "Custom"
+        case .last24Hours: return L10n.t(.period24h)
+        case .day: return L10n.t(.periodDay)
+        case .week: return L10n.t(.periodWeek)
+        case .month: return L10n.t(.periodMonth)
+        case .quarter: return L10n.t(.periodQuarter)
+        case .year: return L10n.t(.periodYear)
+        case .custom: return L10n.t(.periodCustom)
         }
     }
 
@@ -45,15 +45,8 @@ enum ComparisonMode: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var title: String {
         switch self {
-        case .previousPeriod: return "Previous period"
-        case .samePeriodLastYear: return "Same period last year"
-        }
-    }
-
-    var shortTitle: String {
-        switch self {
-        case .previousPeriod: return "last period"
-        case .samePeriodLastYear: return "last year"
+        case .previousPeriod: return L10n.t(.comparisonPrevious)
+        case .samePeriodLastYear: return L10n.t(.comparisonLastYear)
         }
     }
 }

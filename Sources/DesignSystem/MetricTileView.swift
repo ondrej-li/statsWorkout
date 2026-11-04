@@ -47,7 +47,7 @@ struct MetricTileView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(metric.title): \(value)")
+        .accessibilityLabel(L10n.t(.valueA11y, metric.title, value))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

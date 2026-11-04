@@ -15,47 +15,65 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Distance", selection: $settings.distanceUnit) {
+                    Picker(L10n.t(.settingsDistance), selection: $settings.distanceUnit) {
                         ForEach(DistanceUnit.allCases) { unit in
                             Text(unit.title).tag(unit)
                         }
                     }
-                    Picker("Elevation", selection: $settings.elevationUnit) {
+                    Picker(L10n.t(.settingsElevation), selection: $settings.elevationUnit) {
                         ForEach(ElevationUnit.allCases) { unit in
                             Text(unit.title).tag(unit)
                         }
                     }
                 } header: {
-                    Text("Units")
+                    Text(L10n.t(.settingsUnits))
                 } footer: {
-                    Text("Distance is shown in \(settings.distanceUnit.symbol) and elevation in \(settings.elevationUnit.symbol).")
+                    Text(L10n.t(.settingsUnitsFooter, settings.distanceUnit.symbol, settings.elevationUnit.symbol))
                 }
 
                 Section {
-                    Picker("Default period", selection: $settings.preferredPeriod) {
+                    Picker(L10n.t(.settingsLanguage), selection: $settings.language) {
+                        Text(L10n.t(.settingsLanguageSystem, systemLanguage.displayName))
+                            .tag(AppLanguage.system)
+                        ForEach(AppLanguage.allCases.filter { $0 != .system }) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L10n.t(.settingsLanguageFooter))
+                        if needsRestart {
+                            Text(L10n.t(.settingsLanguageRestart))
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+
+                Section {
+                    Picker(L10n.t(.settingsDefaultPeriod), selection: $settings.preferredPeriod) {
                         ForEach(PeriodKind.allCases) { kind in
                             Text(kind.title).tag(kind)
                         }
                     }
-                    Picker("Compare with", selection: $settings.comparisonMode) {
+                    Picker(L10n.t(.settingsCompareWith), selection: $settings.comparisonMode) {
                         ForEach(ComparisonMode.allCases) { mode in
                             Text(mode.title).tag(mode)
                         }
                     }
-                    Picker("Show by default", selection: $settings.dataScope) {
+                    Picker(L10n.t(.settingsShowByDefault), selection: $settings.dataScope) {
                         ForEach(DataScope.allCases) { scope in
                             Text(scope.title).tag(scope)
                         }
                     }
                 } header: {
-                    Text("Statistics")
+                    Text(L10n.t(.settingsStatistics))
                 } footer: {
-                    Text("The default period, the comparison baseline and whether the dashboard starts with continuous data or workout-only data. Both can be changed on the dashboard too.")
+                    Text(L10n.t(.settingsStatisticsFooter))
                 }
 
                 Section {
-                    LabeledContent("Status") {
-                        Text(environment.healthKit.isAvailable ? "Available" : "Unavailable")
+                    LabeledContent(L10n.t(.settingsHealthStatus)) {
+                        Text(environment.healthKit.isAvailable ? L10n.t(.settingsHealthAvailable) : L10n.t(.settingsHealthUnavailable))
                             .foregroundStyle(environment.healthKit.isAvailable ? .green : .secondary)
                     }
 
@@ -63,14 +81,14 @@ struct SettingsView: View {
                         Task { await requestAccess() }
                     } label: {
                         HStack {
-                            Text(isRequestingAccess ? "Requesting…" : "Request read access")
+                            Text(isRequestingAccess ? L10n.t(.actionRequesting) : L10n.t(.settingsHealthRequest))
                             Spacer()
                             if isRequestingAccess { ProgressView() }
                         }
                     }
                     .disabled(isRequestingAccess || !environment.healthKit.isAvailable)
 
-                    Button("Open Health app") {
+                    Button(L10n.t(.settingsHealthOpen)) {
                         if let url = URL(string: "x-apple-health://") {
                             openURL(url)
                         }
@@ -83,13 +101,13 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 } header: {
-                    Text("Apple Health")
+                    Text(L10n.t(.settingsHealth))
                 } footer: {
-                    Text("HealthKit never reports whether read access was granted. If charts stay empty, check access in the Health app under Sharing → Apps.")
+                    Text(L10n.t(.settingsHealthFooter))
                 }
 
                 Section {
-                    Toggle("Use demo data", isOn: $settings.useMockData)
+                    Toggle(L10n.t(.settingsDemo), isOn: $settings.useMockData)
                         .onChange(of: settings.useMockData) { _, usesMock in
                             environment.invalidateCache()
                             if !usesMock {
@@ -98,47 +116,63 @@ struct SettingsView: View {
                             Task { await refreshCacheInfo() }
                         }
 
-                    LabeledContent("Offline cache") {
-                        Text(cacheInfo.map { "\($0.dayCount) days" } ?? "—")
+                    LabeledContent(L10n.t(.settingsCache)) {
+                        Text(cacheInfo.map { L10n.t(.settingsCacheDays, $0.dayCount) } ?? "—")
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
                     }
-                    LabeledContent("Last sync") {
-                        Text(cacheInfo?.lastSyncedAt.map { $0.formatted(.relative(presentation: .named)) } ?? "Never")
+                    LabeledContent(L10n.t(.settingsLastSync)) {
+                        Text(cacheInfo?.lastSyncedAt.map {
+                            $0.formatted(.relative(presentation: .named).locale(environment.locale))
+                        } ?? L10n.t(.settingsNever))
                             .foregroundStyle(.secondary)
                     }
-                    Button("Clear cached samples") {
+                    Button(L10n.t(.settingsCacheClear)) {
                         environment.invalidateCache()
                         Task {
                             await refreshCacheInfo()
-                            authorizationMessage = "Cache cleared. It will be rebuilt on the next load."
+                            authorizationMessage = L10n.t(.settingsCacheCleared)
                         }
                     }
                     .disabled((cacheInfo?.dayCount ?? 0) == 0)
                 } header: {
-                    Text("Data source")
+                    Text(L10n.t(.settingsDataSource))
                 } footer: {
-                    Text("Demo data is generated on device and is handy for previewing the dashboard in the simulator. Daily totals are cached on this device and refreshed in the background, so a month or year view does not re-read every sample each time.")
+                    Text(L10n.t(.settingsDemoFooter))
                 }
 
                 Section {
-                    LabeledContent("Version", value: Bundle.main.appVersion)
-                    LabeledContent("Minimum iOS", value: "26.0")
-                    Link("Privacy policy", destination: AppLinks.privacyPolicy)
-                    Link("Support", destination: AppLinks.support)
+                    LabeledContent(L10n.t(.settingsVersion), value: Bundle.main.appVersion)
+                    LabeledContent(L10n.t(.settingsMinimumIOS), value: "26.0")
+                    Link(L10n.t(.settingsPrivacy), destination: AppLinks.privacyPolicy)
+                    Link(L10n.t(.settingsSupport), destination: AppLinks.support)
                 } header: {
-                    Text("About")
+                    Text(L10n.t(.settingsAbout))
                 } footer: {
-                    Text("StatsWorkout is made by Ondřej Linek. Questions: ondrej.linek@gmail.com")
+                    Text(L10n.t(.settingsAboutFooter))
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(L10n.t(.tabSettings))
             .task { await refreshCacheInfo() }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
                 Task { await refreshCacheInfo() }
             }
         }
+    }
+
+    /// The language the device would pick, shown next to "System".
+    private var systemLanguage: AppLanguage {
+        AppLanguage.resolve(selection: .system, preferredLanguages: Locale.preferredLanguages)
+    }
+
+    /// The chosen language is read at launch, so a change only takes effect on
+    /// the next start.
+    private var needsRestart: Bool {
+        AppLanguage.resolve(
+            selection: environment.settings.language,
+            preferredLanguages: Locale.preferredLanguages
+        ) != L10n.shared.language
     }
 
     private func refreshCacheInfo() async {
@@ -151,7 +185,7 @@ struct SettingsView: View {
         do {
             try await environment.healthKit.requestAuthorization()
             environment.startBackgroundDelivery()
-            authorizationMessage = "Request completed. Turn off demo data to see Apple Health values."
+            authorizationMessage = L10n.t(.settingsHealthRequested)
         } catch {
             authorizationMessage = error.localizedDescription
         }

@@ -11,6 +11,7 @@ final class AppSettings {
     var preferredPeriod: PeriodKind { didSet { store(preferredPeriod.rawValue, forKey: Key.preferredPeriod) } }
     var useMockData: Bool { didSet { store(useMockData, forKey: Key.useMockData) } }
     var dataScope: DataScope { didSet { store(dataScope.rawValue, forKey: Key.dataScope) } }
+    var language: AppLanguage { didSet { store(language.rawValue, forKey: Key.language) } }
 
     private let defaults: UserDefaults
     private let persists: Bool
@@ -24,18 +25,26 @@ final class AppSettings {
         let storedComparison = defaults.string(forKey: Key.comparisonMode).flatMap(ComparisonMode.init(rawValue:))
         let storedPeriod = defaults.string(forKey: Key.preferredPeriod).flatMap(PeriodKind.init(rawValue:))
         let storedScope = defaults.string(forKey: Key.dataScope).flatMap(DataScope.init(rawValue:))
+        let storedLanguage = defaults.string(forKey: Key.language).flatMap(AppLanguage.init(rawValue:))
 
         distanceUnit = storedDistance ?? .kilometers
         elevationUnit = storedElevation ?? .meters
         comparisonMode = storedComparison ?? .previousPeriod
         preferredPeriod = storedPeriod ?? .month
         dataScope = ScreenshotRoute.scope ?? storedScope ?? .all
+        language = storedLanguage ?? .system
 
         if defaults.object(forKey: Key.useMockData) == nil {
             useMockData = Self.defaultsToMockData
         } else {
             useMockData = defaults.bool(forKey: Key.useMockData)
         }
+    }
+
+    /// The saved language choice, read before the app builds its view tree so
+    /// the catalogs are loaded by the time the first string renders.
+    nonisolated static func storedLanguage(in defaults: UserDefaults = .standard) -> AppLanguage {
+        defaults.string(forKey: Key.language).flatMap(AppLanguage.init(rawValue:)) ?? .system
     }
 
     nonisolated static var defaultsToMockData: Bool {
@@ -62,5 +71,6 @@ final class AppSettings {
         static let preferredPeriod = "settings.preferredPeriod"
         static let useMockData = "settings.useMockData"
         static let dataScope = "settings.dataScope"
+        static let language = "settings.language"
     }
 }

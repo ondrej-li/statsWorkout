@@ -160,11 +160,15 @@ final class AppEnvironment {
         PeriodCalendar(calendar: calendar)
     }
 
+    /// Locale of the language the app was started in, so dates and numbers match
+    /// the chosen language rather than the device.
+    var locale: Locale { L10n.shared.locale }
+
     var formatter: MetricFormatter {
-        MetricFormatter(units: settings.unitPreferences)
+        MetricFormatter(units: settings.unitPreferences, locale: locale)
     }
 
     var periodFormatter: PeriodFormatter {
-        PeriodFormatter(calendar: calendar)
+        PeriodFormatter(calendar: calendar, locale: locale)
     }
 }
