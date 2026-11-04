@@ -140,6 +140,7 @@ final class DashboardViewModel {
 
         if stats == nil {
             phase = .loading
+            ScreenshotRoute.markLoading("stats")
         }
 
         do {
@@ -196,6 +197,7 @@ final class DashboardViewModel {
                 .filter { request.range.contains($0.start) }
                 .sorted { $0.start > $1.start }
             phase = .loaded
+            ScreenshotRoute.markReady("stats")
         } catch is CancellationError {
             return
         } catch let error as HealthDataError where error.isAuthorizationNotDetermined {

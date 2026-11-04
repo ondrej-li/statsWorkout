@@ -264,10 +264,16 @@ Workflow, branch naming and PR requirements are described in [CONTRIBUTING.md](C
 ## Screenshots and artwork
 
 `make shots` captures the App Store screenshots from clean simulators (6.1"/6.3" iPhone and
-13" iPad) into [screenshots/](screenshots) — see [screenshots/README.md](screenshots/README.md) for
-the frames and the debug-only launch arguments behind them (including `-screenshotWorkout` for the
-detail screen). Icon candidates are in [docs/icons/](docs/icons); the shipped icon is the
-pulse-trend one.
+13" iPad) into [screenshots/en/](screenshots/en); `make shots-cs` fills `screenshots/cs/` with the
+same frames in Czech. See [screenshots/README.md](screenshots/README.md) for the frames and the
+debug-only launch arguments behind them (`-screenshotWorkout` for the detail screen,
+`-screenshotHideDemoLabels` for clean artwork). The capture waits for the app to report a screen as
+loaded rather than sleeping, and retakes the frame until two attempts match, so a skeleton card or a
+mid-scroll frame cannot end up in the store.
+
+Icon candidates are in [docs/icons/](docs/icons); the shipped icon is the pulse-trend one. Store copy
+lives in [docs/app-store-listing.md](docs/app-store-listing.md) — `python3 tools/check-listing-limits.py`
+verifies it against Apple's character limits.
 
 ## Publishing
 

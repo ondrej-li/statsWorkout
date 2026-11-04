@@ -28,6 +28,7 @@ final class ActivityLogViewModel {
 
     func load(environment: AppEnvironment) async {
         phase = .loading
+        ScreenshotRoute.markLoading("activities")
         do {
             let calendar = environment.calendar
             let now = environment.now()
@@ -41,6 +42,7 @@ final class ActivityLogViewModel {
                 .map { Day(date: $0.key, activities: $0.value.sorted { $0.start > $1.start }) }
                 .sorted { $0.date > $1.date }
             phase = .loaded
+            ScreenshotRoute.markReady("activities")
         } catch {
             phase = .failed(error.localizedDescription)
         }
@@ -113,7 +115,7 @@ struct ActivityLogView: View {
         }
         .listStyle(.insetGrouped)
         .safeAreaInset(edge: .bottom) {
-            if model.showsDemoData {
+            if model.showsDemoData && !ScreenshotRoute.hidesDemoLabels {
                 demoFooter
             }
         }
