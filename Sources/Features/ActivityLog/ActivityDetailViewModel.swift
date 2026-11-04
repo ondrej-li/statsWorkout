@@ -10,37 +10,60 @@ final class ActivityDetailViewModel {
         case failed(String)
     }
 
+    /// Where the trace on screen came from. Shown to the user, because a
+    /// fabricated route must never be able to hide behind real numbers.
+    enum RouteProvenance: Equatable {
+        case loading
+        case demo
+        case recorded(points: Int)
+        case notRecorded
+    }
+
     let activity: ActivitySample
     private(set) var phase: Phase = .loading
     private(set) var detail = WorkoutDetail()
     private(set) var placeName: String?
 
+    /// The source that recorded this workout, resolved by the caller. It is
+    /// passed in rather than looked up here so the detail screen can never pick
+    /// a different source from the list that produced the workout.
+    private let source: any HealthDataProviding
     private let environment: AppEnvironment
     private let places: any PlaceResolving
 
-    init(activity: ActivitySample, environment: AppEnvironment, places: (any PlaceResolving)? = nil) {
+    init(
+        activity: ActivitySample,
+        environment: AppEnvironment,
+        source: (any HealthDataProviding)? = nil,
+        places: (any PlaceResolving)? = nil
+    ) {
         self.activity = activity
         self.environment = environment
+        self.source = source ?? environment.dataSource(for: activity)
         self.places = places ?? environment.places
     }
 
+    // MARK: - Presentation
+
     var formatter: MetricFormatter { environment.formatter }
+    var distanceUnit: DistanceUnit { environment.settings.distanceUnit }
+    var calendar: Calendar { environment.calendar }
+
+    var title: String { environment.workoutTitle(for: activity) }
 
     /// True for a generated demo workout: no HealthKit identity means nothing
     /// about it was recorded.
     var isDemo: Bool { activity.healthKitUUID == nil }
 
-    var naming: WorkoutNaming {
-        WorkoutNaming(calendar: environment.calendar)
-    }
-
-    var title: String {
-        environment.workoutTitle(for: activity)
+    var provenance: RouteProvenance {
+        guard phase == .loaded else { return .loading }
+        if isDemo { return .demo }
+        return detail.hasRoute ? .recorded(points: detail.route.count) : .notRecorded
     }
 
     var splits: [WorkoutSplit] {
         guard detail.hasRoute else { return [] }
-        let splitLength: Double = environment.settings.distanceUnit == .kilometers ? 1_000 : 1_609.344
+        let splitLength: Double = distanceUnit == .kilometers ? 1_000 : 1_609.344
         // GPS traces are a little longer than the distance HealthKit reports, so
         // splits are laid out along the recorded distance rather than the raw
         // trace length.
@@ -51,13 +74,19 @@ final class ActivityDetailViewModel {
         )
     }
 
+    /// Time span of the recorded trace, for the route details disclosure.
+    var traceTimeRange: String? {
+        guard let first = detail.route.first?.time, let last = detail.route.last?.time else { return nil }
+        return "\(first.formatted(date: .omitted, time: .shortened)) – \(last.formatted(date: .omitted, time: .shortened))"
+    }
+
+    // MARK: - Loading
+
     func load() async {
         if case .loaded = phase { return }
         phase = .loading
+
         do {
-            // Never mix sources: a real workout is read from HealthKit even when
-            // demo data is switched on elsewhere in the app.
-            let source = environment.dataSource(for: activity)
             detail = try await source.workoutDetail(for: activity)
             phase = .loaded
         } catch {

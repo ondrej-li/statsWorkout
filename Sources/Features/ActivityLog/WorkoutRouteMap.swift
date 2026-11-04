@@ -7,8 +7,10 @@ struct WorkoutRouteMap: View {
     var tint: Color = Theme.accent(for: .distance)
     var height: CGFloat = 240
 
+    @State private var camera: MapCameraPosition = .automatic
+
     var body: some View {
-        Map(initialPosition: .region(region)) {
+        Map(position: $camera) {
             MapPolyline(coordinates: coordinates)
                 .stroke(tint, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
 
@@ -23,6 +25,11 @@ struct WorkoutRouteMap: View {
             }
         }
         .mapStyle(.standard(elevation: .flat, pointsOfInterest: .excludingAll))
+        .task(id: route.count) {
+            // The route arrives after the view appears; `initialPosition` would
+            // keep whatever region the empty map started with.
+            camera = .region(region)
+        }
         .frame(height: height)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
