@@ -212,6 +212,12 @@ enum L10nKey: String, CaseIterable, Sendable {
     case settingsLanguageFooter = "settings.language.footer"
     case settingsLanguageRestart = "settings.language.restart"
 
+    // Sharing
+    case shareButton = "share.button"
+    case shareCardTagline = "share.card.tagline"
+    case shareErrorTitle = "share.error.title"
+    case shareErrorBody = "share.error.body"
+
     // Units
     case unitDistanceKilometers = "unit.distance.km"
     case unitDistanceMiles = "unit.distance.mi"

@@ -4,6 +4,8 @@ import SwiftUI
 /// happened, the numbers, and the splits for distance activities.
 struct ActivityDetailView: View {
     @State private var model: ActivityDetailViewModel
+    @State private var shareItem: ShareItem?
+    @State private var shareFailed = false
 
     /// The environment is passed in, not read from `@Environment`: a view model
     /// built in `init` cannot see environment values, and a placeholder here
@@ -32,6 +34,22 @@ struct ActivityDetailView: View {
         .background(Theme.screenBackground)
         .navigationTitle(model.activity.kind.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    if let item = model.shareItem() {
+                        shareItem = item
+                    } else {
+                        shareFailed = true
+                    }
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .accessibilityLabel(L10n.t(.shareButton))
+                .disabled(model.phase == .loading)
+            }
+        }
+        .sharePresentation(item: $shareItem, failure: $shareFailed)
         .task { await model.load() }
     }
 
@@ -76,18 +94,8 @@ struct ActivityDetailView: View {
         }
     }
 
-    private var dayTitle: String {
-        model.activity.start.formatted(
-            .dateTime.weekday(.wide).day().month(.wide).year().locale(model.locale)
-        )
-    }
-
-    private var timeRange: String {
-        let style = Date.FormatStyle(date: .omitted, time: .shortened).locale(model.locale)
-        let start = model.activity.start.formatted(style)
-        let end = model.activity.end.formatted(style)
-        return "\(start) – \(end)"
-    }
+    private var dayTitle: String { model.dateText }
+    private var timeRange: String { model.timeText }
 
     // MARK: - Route
 
@@ -189,45 +197,12 @@ struct ActivityDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 SectionLabel(title: L10n.t(.detailSection))
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                    metric(L10n.t(.detailDuration), model.formatter.duration(minutes: model.activity.duration / 60), "timer")
-                    if let distance = model.activity.distanceMeters, distance > 0 {
-                        metric(L10n.t(.detailDistance), model.formatter.string(distance, for: .distance), "point.topleft.down.to.point.bottomright.curvepath")
-                        if let pace = averagePace {
-                            metric(L10n.t(.detailAveragePace), pace, "speedometer")
-                        }
-                    }
-                    if let elevation = model.activity.elevationGainMeters, elevation > 0 {
-                        metric(L10n.t(.detailElevation), model.formatter.string(elevation, for: .elevationGain), "mountain.2")
-                    }
-                    if let steps = model.activity.stepCount, steps > 0 {
-                        metric(L10n.t(.detailSteps), model.formatter.heroString(steps, for: .steps), "shoeprints.fill")
-                    }
-                    if let energy = model.detail.energyKilocalories ?? model.activity.activeEnergyKilocalories, energy > 0 {
-                        metric(
-                            L10n.t(.detailEnergy),
-                            L10n.t(.valueWithUnit, "\(Int(energy.rounded()))", L10n.t(.unitKcal)),
-                            "flame"
-                        )
-                    }
-                    if let heart = model.detail.averageHeartRate {
-                        metric(L10n.t(.detailAverageHeartRate), model.formatter.heartRate(heart), "heart")
-                    }
-                    if let heart = model.detail.maximumHeartRate {
-                        metric(L10n.t(.detailMaxHeartRate), model.formatter.heartRate(heart), "heart.circle")
+                    ForEach(model.metricRows) { row in
+                        metric(row.title, row.value, row.systemImage)
                     }
                 }
             }
         }
-    }
-
-    private var averagePace: String? {
-        guard let distance = model.activity.distanceMeters, distance > 0, model.activity.duration > 0 else {
-            return nil
-        }
-        let unit = model.distanceUnit
-        let units = unit.value(fromMeters: distance)
-        guard units > 0 else { return nil }
-        return model.formatter.pace(model.activity.duration / units, unit: unit)
     }
 
     private func metric(_ title: String, _ value: String, _ systemImage: String) -> some View {

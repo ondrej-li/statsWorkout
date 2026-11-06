@@ -5,6 +5,8 @@ struct DashboardView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: DashboardViewModel
     @State private var isShowingCustomRange = false
+    @State private var shareItem: ShareItem?
+    @State private var shareFailed = false
 
     init(environment: AppEnvironment) {
         _model = State(initialValue: DashboardViewModel(environment: environment))
@@ -38,13 +40,22 @@ struct DashboardView: View {
             // collapsed large title over the first card.
             .navigationBarTitleDisplayMode(ScreenshotRoute.section == nil ? .large : .inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        share()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .accessibilityLabel(L10n.t(.shareButton))
+                    .disabled(model.stats == nil)
+
                     Button(L10n.t(.actionToday)) {
                         withAnimation(.snappy) { model.goToNow() }
                     }
                     .disabled(model.isCurrentPeriod)
                 }
             }
+            .sharePresentation(item: $shareItem, failure: $shareFailed)
             .task(id: model.loadRequest) { await model.load() }
             .task {
                 // HealthKit wakes the app in the background; the observers only
@@ -72,6 +83,24 @@ struct DashboardView: View {
                     model.applyCustomRange(start: start, end: end)
                 }
             }
+        }
+    }
+
+    /// Renders the card for the period, filter and metric currently on screen.
+    private func share() {
+        guard let stats = model.stats else { return }
+        if let item = ShareComposer.dashboard(
+            stats: stats,
+            metric: model.metric,
+            scope: model.dataScope,
+            title: model.rangeTitle,
+            subtitle: model.periodFormatter.progressCaption(for: stats),
+            formatter: model.formatter,
+            periodFormatter: model.periodFormatter
+        ) {
+            shareItem = item
+        } else {
+            shareFailed = true
         }
     }
 
