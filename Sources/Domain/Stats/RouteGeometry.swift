@@ -133,6 +133,43 @@ enum RouteGeometry {
         return splits
     }
 
+    // MARK: - Drawing
+
+    /// A point in the unit square, `y` growing downwards like a screen.
+    struct UnitPoint: Equatable, Sendable {
+        var x: Double
+        var y: Double
+    }
+
+    /// The route fitted into the unit square with its shape preserved, so a share
+    /// card can draw it at any size without the map. Latitude degrees are
+    /// shorter than longitude degrees away from the equator, so the two are
+    /// scaled by the cosine of the route's latitude before fitting — otherwise a
+    /// loop comes out stretched.
+    static func unitPolyline(of route: [RoutePoint]) -> [UnitPoint] {
+        guard route.count >= 2, let bounds = bounds(of: route) else { return [] }
+
+        let centreLatitude = (bounds.minLatitude + bounds.maxLatitude) / 2 * .pi / 180
+        // A degree of longitude shrinks towards the poles.
+        let xScale = max(cos(centreLatitude), 0.01)
+        let width = (bounds.maxLongitude - bounds.minLongitude) * xScale
+        let height = bounds.maxLatitude - bounds.minLatitude
+        let extent = max(width, height)
+        // A perfectly straight or single-point trace would divide by zero.
+        guard extent > 0 else { return [] }
+
+        // Centre the shorter axis so the shape sits in the middle of the square.
+        let xInset = (extent - width) / 2 / extent
+        let yInset = (extent - height) / 2 / extent
+
+        return route.map { point in
+            UnitPoint(
+                x: xInset + (point.longitude - bounds.minLongitude) * xScale / extent,
+                y: yInset + (bounds.maxLatitude - point.latitude) / extent
+            )
+        }
+    }
+
     private static func interpolate(from a: RoutePoint, to b: RoutePoint, fraction: Double) -> RoutePoint {
         let time: Date? = {
             guard let start = a.time, let end = b.time else { return a.time ?? b.time }

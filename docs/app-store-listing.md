@@ -36,7 +36,7 @@ Two localisations ship: **English (primary)** and **Czech**. The app itself spea
 All-day steps, workout distance, elevation and exercise time for any period. Open a workout for its route map and splits — and read everything in your language.
 ```
 
-## Description — English (2561 / 4000)
+## Description — English (2915 / 4000)
 
 ```
 StatsWorkout turns the activity already stored in Apple Health into statistics you can actually read.
@@ -61,6 +61,9 @@ Tap a workout to see it the way the Health app shows it: the route on a map, dur
 
 Workouts also get a name you would use yourself — "Your morning walk around Brtnice", "Your night run around Okříšky". The time of day comes from when you started, the place from the centre of the recorded route, and the name appears in the workout list too.
 
+SHARE YOUR PROGRESS
+One tap turns the screen into a card for Instagram, Facebook, Messenger or WhatsApp: the period you picked, the filter you are on, the chart and every total. Workouts share their own card, with the shape of the route and the numbers that came with it. Both are 1080 × 1350, the shape those apps crop to without cutting anything off.
+
 TEN LANGUAGES
 English, Czech, German, Spanish, French, Italian, Portuguese, Japanese, Korean and Simplified Chinese. Follow your device, or pick one in Settings. Dates, numbers and workout names follow the language you choose.
 
@@ -77,7 +80,7 @@ StatsWorkout asks Apple Health for read-only access to steps, distances, flights
 Requires iOS 26 or later. iPhone and iPad.
 ```
 
-## Description — Czech (2510 / 4000)
+## Description — Czech (2826 / 4000)
 
 ```
 StatsWorkout mění aktivitu uloženou v Apple Health na statistiky, které se dají opravdu číst.
@@ -101,6 +104,9 @@ KAŽDÝ TRÉNINK DO DETAILU
 Klepněte na trénink a uvidíte ho stejně jako v aplikaci Health: trasu na mapě, délku, vzdálenost, průměrné tempo, převýšení, kroky, aktivní energii, průměrnou i maximální tepovou frekvenci a mezičasy na kilometr nebo míli.
 
 Tréninky dostanou i jméno, které byste použili sami — „ranní procházka – Brtnice", „noční běh – Okříšky". Čas dne vychází ze začátku tréninku, místo ze středu zaznamenané trasy, a jméno se objeví i v seznamu aktivit.
+
+SDÍLEJTE SVŮJ POKROK
+Jedním klepnutím se obrazovka změní na kartu pro Instagram, Facebook, Messenger nebo WhatsApp: zvolené období, aktivní filtr, graf a všechny součty. Tréninky mají vlastní kartu s tvarem trasy a svými čísly. Obě mají 1080 × 1350, tedy tvar, který tyto aplikace ořezávají, aniž by o něco přišly.
 
 DESET JAZYKŮ
 Angličtina, čeština, němčina, španělština, francouzština, italština, portugalština, japonština, korejština a zjednodušená čínština. Aplikace může sledovat jazyk zařízení, nebo si jeden vyberete v Nastavení. Datumy, čísla i jména tréninků se řídí zvoleným jazykem.
@@ -133,13 +139,14 @@ kroky,trénink,aktivita,vzdálenost,převýšení,chůze,běh,kolo,turistika,tra
 Apple indexes the app name and subtitle too, so "stats", "health" and "period" are deliberately not
 repeated here.
 
-## What's new — 1.1.0 (393 / 4000)
+## What's new — 1.1.0 (499 / 4000)
 
 English:
 
 ```
 • Workout detail: open any activity for its route map, splits, heart rate and all the numbers
 • Workouts are named after when and where they happened — "Your morning walk around Brtnice"
+• Share a period or a workout as a 1080 × 1350 card built for Instagram, Facebook, Messenger and WhatsApp
 • Ten languages, picked in Settings or following your device
 • Workout routes are now requested properly, so recorded routes appear on the map
 • Statistics refresh in the background, with an on-device cache
@@ -150,6 +157,7 @@ Czech:
 ```
 • Detail tréninku: mapa trasy, mezičasy, tepová frekvence a všechny statistiky
 • Tréninky se jmenují podle času a místa — „odpolední procházka – Třebíč"
+• Sdílení období i tréninku jako karty 1080 × 1350 pro Instagram, Facebook, Messenger a WhatsApp
 • Deset jazyků, vyberete je v Nastavení nebo sledují jazyk zařízení
 • Přístup k trasám tréninků se nyní vyžaduje správně, takže se zaznamenané trasy zobrazí na mapě
 • Statistiky se aktualizují na pozadí díky mezipaměti v zařízení

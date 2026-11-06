@@ -82,6 +82,128 @@ final class ActivityDetailViewModel {
         return "\(first.formatted(style)) – \(last.formatted(style))"
     }
 
+    // MARK: - Rows
+
+    /// The numbers the detail screen and the share card both show, built once so
+    /// they can never disagree.
+    struct MetricRow: Identifiable, Equatable {
+        let id: String
+        let title: String
+        let value: String
+        let systemImage: String
+    }
+
+    var metricRows: [MetricRow] {
+        var rows: [MetricRow] = [
+            MetricRow(
+                id: "duration",
+                title: L10n.t(.detailDuration),
+                value: formatter.duration(minutes: activity.duration / 60),
+                systemImage: "timer"
+            )
+        ]
+
+        if let distance = activity.distanceMeters, distance > 0 {
+            rows.append(
+                MetricRow(
+                    id: "distance",
+                    title: L10n.t(.detailDistance),
+                    value: formatter.string(distance, for: .distance),
+                    systemImage: "point.topleft.down.to.point.bottomright.curvepath"
+                )
+            )
+            if let pace = averagePace {
+                rows.append(
+                    MetricRow(id: "pace", title: L10n.t(.detailAveragePace), value: pace, systemImage: "speedometer")
+                )
+            }
+        }
+        if let elevation = activity.elevationGainMeters, elevation > 0 {
+            rows.append(
+                MetricRow(
+                    id: "elevation",
+                    title: L10n.t(.detailElevation),
+                    value: formatter.string(elevation, for: .elevationGain),
+                    systemImage: "mountain.2"
+                )
+            )
+        }
+        if let steps = activity.stepCount, steps > 0 {
+            rows.append(
+                MetricRow(
+                    id: "steps",
+                    title: L10n.t(.detailSteps),
+                    value: formatter.heroString(steps, for: .steps),
+                    systemImage: "shoeprints.fill"
+                )
+            )
+        }
+        if let energy = detail.energyKilocalories ?? activity.activeEnergyKilocalories, energy > 0 {
+            rows.append(
+                MetricRow(
+                    id: "energy",
+                    title: L10n.t(.detailEnergy),
+                    value: L10n.t(.valueWithUnit, "\(Int(energy.rounded()))", L10n.t(.unitKcal)),
+                    systemImage: "flame"
+                )
+            )
+        }
+        if let heart = detail.averageHeartRate {
+            rows.append(
+                MetricRow(
+                    id: "heart",
+                    title: L10n.t(.detailAverageHeartRate),
+                    value: formatter.heartRate(heart),
+                    systemImage: "heart"
+                )
+            )
+        }
+        if let heart = detail.maximumHeartRate {
+            rows.append(
+                MetricRow(
+                    id: "maxHeart",
+                    title: L10n.t(.detailMaxHeartRate),
+                    value: formatter.heartRate(heart),
+                    systemImage: "heart.circle"
+                )
+            )
+        }
+        return rows
+    }
+
+    private var averagePace: String? {
+        guard let distance = activity.distanceMeters, distance > 0, activity.duration > 0 else {
+            return nil
+        }
+        let unit = distanceUnit
+        let units = unit.value(fromMeters: distance)
+        guard units > 0 else { return nil }
+        return formatter.pace(activity.duration / units, unit: unit)
+    }
+
+    /// Date and time of the workout, formatted for the chosen language.
+    var dateText: String {
+        activity.start.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(locale))
+    }
+
+    var timeText: String {
+        let style = Date.FormatStyle(date: .omitted, time: .shortened).locale(locale)
+        return "\(activity.start.formatted(style)) – \(activity.end.formatted(style))"
+    }
+
+    /// Ready-to-share artwork of this workout.
+    func shareItem() -> ShareItem? {
+        ShareComposer.workout(
+            activity: activity,
+            metricRows: metricRows,
+            route: detail.route,
+            title: title,
+            dateText: dateText,
+            timeText: timeText,
+            locale: locale
+        )
+    }
+
     // MARK: - Loading
 
     var canRequestRouteAccess: Bool {

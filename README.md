@@ -37,6 +37,11 @@ route, splits and statistics.
   the location.
 - **Background updates** — HealthKit background delivery plus an on-device cache of daily totals, so
   the app is current when it opens and a month or year view does not re-read years of samples.
+- **Sharing** — one tap on the dashboard shares the period *as filtered*: the range, the All data /
+  Activities scope and the metric on screen, drawn together with the chart, the comparison and all
+  five totals. A workout shares its own card — route, name, date and numbers. Both render to a
+  1080 × 1350 PNG named after the period or the workout, which is the 4:5 shape Instagram, Facebook,
+  Messenger and WhatsApp crop to without losing anything.
 - **Ten languages** — English, Czech, German, Spanish, French, Italian, Portuguese, Japanese,
   Korean and Simplified Chinese. Either follow the device (unsupported languages fall back to
   English) or pick one in Settings; the choice is applied on the next launch. Everything is
@@ -195,6 +200,32 @@ The sentence itself lives in the language catalogs (`naming.title` with `%1$@` t
 `%2$@` activity noun, `%3$@` place), so each language can order it its own way instead of having
 an English pattern glued together.
 
+### Sharing
+
+`Sources/Features/Share/` turns what a screen already computed into an image — no HealthKit call and
+no new permission, so a card always matches the screen it came from:
+
+| File | Role |
+| --- | --- |
+| `DashboardShareCard.swift` | period title, scope, hero metric, bars and the other four totals |
+| `WorkoutShareCard.swift` | workout name, date, the shape of the route and six numbers |
+| `ShareCard.swift` | card chrome: gradient, wordmark, stat rows, bar chart, route trace |
+| `ShareComposer.swift` | builds the card, renders it with `ImageRenderer`, writes the PNG |
+| `ShareSheet.swift` | `UIActivityViewController`, plus the failure alert |
+
+Two details worth keeping:
+
+- The card is drawn with plain shapes rather than Swift Charts, because it is rendered off screen
+  and the result has to be identical every time.
+- The route is a stylised trace of the recording, not a map snapshot: it is the real shape, it
+  carries no street names to a social network, and it needs no network to render. `RouteGeometry
+  .unitPolyline` fits it to the square with the latitude correction, so a loop does not come out
+  stretched.
+
+The sheet is handed a **file** (`<workout or period>.png` in the app's temporary directory) rather
+than an in-memory `UIImage`: the thumbnail appears, the name is readable, and Instagram and WhatsApp
+accept it. If writing the file fails, the in-memory image is shared instead.
+
 ### Localisation
 
 Strings live in `Resources/L10n/<code>.json` and are read by a small typed layer:
@@ -241,10 +272,11 @@ adding or deleting source files.
 make test
 ```
 
-78 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
+85 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
 both data scopes, partial-period comparison, unit formatting, the sample cache and refresh planning,
 route geometry and splits, workout naming, and the language catalogs (completeness, placeholders,
-plural forms and word order). Chart cards, the map and the detail screen ship with
+plural forms and word order), and the share cards (pixel size, non-blank render, axis ticks, and the
+route fit). Chart cards, the map and the detail screen ship with
 `#Preview`s backed by the mock data source, so visual work does not need a device.
 
 CI runs the same build and test on every pull request (see `.github/workflows/ci.yml`).
