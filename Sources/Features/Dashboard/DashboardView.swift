@@ -56,7 +56,12 @@ struct DashboardView: View {
                 }
             }
             .sharePresentation(item: $shareItem, failure: $shareFailed)
-            .task(id: model.loadRequest) { await model.load() }
+            .task(id: model.loadRequest) {
+                await model.load()
+                // Artwork only: `-screenshotShare YES` opens the share preview
+                // once the dashboard has data.
+                if ScreenshotRoute.opensSharePreview, shareItem == nil { share() }
+            }
             .task {
                 // HealthKit wakes the app in the background; the observers only
                 // need installing once access exists.

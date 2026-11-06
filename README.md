@@ -8,8 +8,8 @@ renders them with Swift Charts: zoomable bar charts, a cumulative progress compa
 press-and-drag value inspection. Every workout opens into a Health-style detail screen with its
 route, splits and statistics.
 
-> **Status:** 1.1.0. Statistics, charts, data scopes, background updates, workout detail with routes
-> and the App Store pages are done. Widgets, goals and localisation are not implemented yet.
+> **Status:** 1.2.0. Statistics, charts, data scopes, background updates, workout detail with
+> routes, ten languages and social sharing are done. Widgets and goals are not implemented yet.
 
 <p align="center">
   <img src="docs/dashboard.png" alt="StatsWorkout dashboard showing November totals, metric tiles and a steps chart" width="320">

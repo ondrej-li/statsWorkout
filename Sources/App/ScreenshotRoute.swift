@@ -68,6 +68,11 @@ enum ScreenshotRoute {
         return formatter.date(from: raw)
     }
 
+    /// Opens the share preview, so the artwork can be photographed.
+    static var opensSharePreview: Bool {
+        value(after: "-screenshotShare") == "YES"
+    }
+
     /// Opens the detail screen of the nth workout in the activity log.
     static var workoutIndex: Int? {
         value(after: "-screenshotWorkout").flatMap(Int.init)

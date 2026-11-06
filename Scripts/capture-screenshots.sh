@@ -207,14 +207,18 @@ iphone() {
     # The 1.1 headline: a workout as the Health app shows it, with its route.
     capture "$IPHONE" "$d" 04-workout-detail detail \
         -screenshotTab activities -screenshotWorkout 0
-    capture "$IPHONE" "$d" 05-activity-log activities \
+    # The card that gets posted, shown in the share preview.
+    capture "$IPHONE" "$d" 05-share stats \
+        -screenshotTab stats -screenshotPeriod month -screenshotScope all \
+        -screenshotOffset -1 -screenshotShare YES
+    capture "$IPHONE" "$d" 06-activity-log activities \
         -screenshotTab activities
     # The workout-only view is most legible unscrolled, where the switch itself
     # and the smaller numbers are both visible.
-    capture "$IPHONE" "$d" 06-activities-only stats \
+    capture "$IPHONE" "$d" 07-activities-only stats \
         -screenshotTab stats -screenshotPeriod month -screenshotScope activities \
         -screenshotOffset -1
-    capture "$IPHONE" "$d" 07-settings settings \
+    capture "$IPHONE" "$d" 08-settings settings \
         -screenshotTab settings
 }
 
@@ -235,7 +239,10 @@ ipad() {
         -screenshotOffset -1 -screenshotSection progress -screenshotSelect peak
     capture "$IPAD" "$d" 04-workout-detail detail \
         -screenshotTab activities -screenshotWorkout 0
-    capture "$IPAD" "$d" 05-activity-log activities \
+    capture "$IPAD" "$d" 05-share stats \
+        -screenshotTab stats -screenshotPeriod month -screenshotScope all \
+        -screenshotOffset -1 -screenshotShare YES
+    capture "$IPAD" "$d" 06-activity-log activities \
         -screenshotTab activities
 }
 
