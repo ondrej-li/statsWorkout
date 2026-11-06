@@ -76,12 +76,14 @@ iPad), all with a 9:41 status bar, no alpha and no metadata chunks.
 | 2 | `en/iphone/02-day.png` | hourly bars with a value callout + progress chart |
 | 3 | `en/iphone/03-progress.png` | running total against the previous period |
 | 4 | `en/iphone/04-workout-detail.png` | a workout with its route map, metrics and splits |
-| 5 | `en/iphone/05-activity-log.png` | workouts by day, with their names |
-| 6 | `en/iphone/06-activities-only.png` | workout-only numbers |
-| 7 | `en/iphone/07-settings.png` | units, language, defaults and Health access |
+| 5 | `en/iphone/05-share.png` | the card that goes to Instagram, Facebook, Messenger or WhatsApp |
+| 6 | `en/iphone/06-activity-log.png` | workouts by day, with their names |
+| 7 | `en/iphone/07-activities-only.png` | workout-only numbers |
+| 8 | `en/iphone/08-settings.png` | units, language, defaults and Health access |
 
 iPad: `en/ipad/01-dashboard.png`, `02-day.png`, `03-progress.png`, `04-workout-detail.png`,
-`05-activity-log.png`. The same seven/five frames exist under `cs/` for the Czech listing.
+`05-share.png`, `06-activity-log.png`. The same eight/six frames exist under `cs/` for the Czech
+listing.
 
 ## App icon
 

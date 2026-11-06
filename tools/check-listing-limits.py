@@ -4,7 +4,8 @@
 App Store Connect only tells you a field is too long when you paste it in, so the
 counts are verified here instead. Run it after editing the listing:
 
-    python3 tools/check-listing-limits.py
+    python3 tools/check-listing-limits.py          # verify
+    python3 tools/check-listing-limits.py --fix    # rewrite the counts in the headings
 
 Exits 1 when a field is over its limit or a required field is missing.
 """
@@ -42,7 +43,27 @@ def limit_for(heading: str) -> int | None:
     return LIMITS.get(label)
 
 
+def rewrite_counts(text: str) -> str:
+    """Refreshes the "(used / limit)" suffix on every heading that has one."""
+    pattern = re.compile(r"^(## .+?) \((\d+) / (\d+)\)$", re.M)
+    out = text
+    for match in reversed(list(pattern.finditer(text))):
+        heading = match.group(1)
+        fence_start = text.find("```", match.end())
+        fence_end = text.find("```", fence_start + 3)
+        if fence_start == -1 or fence_end == -1:
+            continue
+        block = text[fence_start + 3:fence_end]
+        block = block.strip("\n")
+        out = out[:match.start()] + f"{heading} ({len(block)} / {match.group(3)})" + out[match.end():]
+    return out
+
+
 def main() -> int:
+    if "--fix" in sys.argv:
+        LISTING.write_text(rewrite_counts(LISTING.read_text()))
+        print(f"counts refreshed in {LISTING.name}")
+
     text = LISTING.read_text()
     blocks: list[tuple[str, str]] = []
     heading = ""

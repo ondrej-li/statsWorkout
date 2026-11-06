@@ -12,6 +12,7 @@ enum L10nKey: String, CaseIterable, Sendable {
     case actionReload = "action.reload"
     case actionCancel = "action.cancel"
     case actionApply = "action.apply"
+    case actionDone = "action.done"
     case actionPreviousPeriod = "action.previousPeriod"
     case actionNextPeriod = "action.nextPeriod"
     case actionRequesting = "action.requesting"
@@ -214,6 +215,7 @@ enum L10nKey: String, CaseIterable, Sendable {
 
     // Sharing
     case shareButton = "share.button"
+    case sharePreviewHint = "share.preview.hint"
     case shareCardTagline = "share.card.tagline"
     case shareErrorTitle = "share.error.title"
     case shareErrorBody = "share.error.body"

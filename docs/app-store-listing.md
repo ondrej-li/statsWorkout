@@ -1,4 +1,4 @@
-# App Store listing — 1.1.0
+# App Store listing — 1.2.0
 
 Copy ready to paste into App Store Connect. Character counts are Apple's limits, measured on the
 exact strings below — run `$ python3 tools/check-listing-limits.py` to verify them.
@@ -14,7 +14,7 @@ Two localisations ship: **English (primary)** and **Czech**. The app itself spea
 | Subtitle | `Health stats for every period` | 29 / 30 |
 | Bundle ID | `com.defik74.statsWorkout` | — |
 | SKU | `statsworkout-001` | — |
-| Version | `1.1.0` | — |
+| Version | `1.2.0` | — |
 | Primary language | English (U.S.) | — |
 | Primary category | Health & Fitness | — |
 | Secondary category | — | — |
@@ -30,10 +30,10 @@ Two localisations ship: **English (primary)** and **Czech**. The app itself spea
 | Support URL | https://stats-workout.ondralinek.cz/support.html |
 | Marketing URL | https://stats-workout.ondralinek.cz/ |
 
-## Promotional text — English (160 / 170)
+## Promotional text — English (147 / 170)
 
 ```
-All-day steps, workout distance, elevation and exercise time for any period. Open a workout for its route map and splits — and read everything in your language.
+All-day steps, distance, elevation and exercise time for any period — then share your progress as a card made for Instagram, Facebook and WhatsApp.
 ```
 
 ## Description — English (2915 / 4000)
@@ -139,28 +139,36 @@ kroky,trénink,aktivita,vzdálenost,převýšení,chůze,běh,kolo,turistika,tra
 Apple indexes the app name and subtitle too, so "stats", "health" and "period" are deliberately not
 repeated here.
 
-## What's new — 1.1.0 (499 / 4000)
+## What's new — 1.2.0
 
 English:
 
 ```
-• Workout detail: open any activity for its route map, splits, heart rate and all the numbers
-• Workouts are named after when and where they happened — "Your morning walk around Brtnice"
-• Share a period or a workout as a 1080 × 1350 card built for Instagram, Facebook, Messenger and WhatsApp
-• Ten languages, picked in Settings or following your device
-• Workout routes are now requested properly, so recorded routes appear on the map
-• Statistics refresh in the background, with an on-device cache
+• Share your progress: one tap turns the dashboard — period, filter and metric included — into a
+  card made for Instagram, Facebook, Messenger and WhatsApp
+• Every workout gets its own card, with the shape of its route and its numbers
+• Cards are 1080 × 1350, the shape those apps crop to without cutting anything off
+• Also in 1.1: workout detail with route maps and splits, automatic workout names, and ten languages
 ```
 
 Czech:
 
 ```
-• Detail tréninku: mapa trasy, mezičasy, tepová frekvence a všechny statistiky
-• Tréninky se jmenují podle času a místa — „odpolední procházka – Třebíč"
-• Sdílení období i tréninku jako karty 1080 × 1350 pro Instagram, Facebook, Messenger a WhatsApp
-• Deset jazyků, vyberete je v Nastavení nebo sledují jazyk zařízení
-• Přístup k trasám tréninků se nyní vyžaduje správně, takže se zaznamenané trasy zobrazí na mapě
-• Statistiky se aktualizují na pozadí díky mezipaměti v zařízení
+• Sdílení pokroku: jedním klepnutím se přehled — včetně období, filtru a metriky — změní na kartu
+  pro Instagram, Facebook, Messenger a WhatsApp
+• Každý trénink má vlastní kartu s tvarem trasy a svými čísly
+• Karty mají 1080 × 1350, tedy tvar, který tyto aplikace ořezávají, aniž by o něco přišly
+• Navíc v 1.1: detail tréninku s mapou trasy a mezičasy, automatická jména tréninků a deset jazyků
+```
+
+## What's new — 1.1.0
+
+```
+• Workout detail: open any activity for its route map, splits, heart rate and all the numbers
+• Workouts are named after when and where they happened — "Your morning walk around Brtnice"
+• Ten languages, picked in Settings or following your device
+• Workout routes are now requested properly, so recorded routes appear on the map
+• Statistics refresh in the background, with an on-device cache
 ```
 
 ## What's new — 1.0.0
@@ -174,7 +182,7 @@ First release.
 • Fair comparisons against the previous period or last year
 ```
 
-## Review notes (1369 / 4000)
+## Review notes (1554 / 4000)
 
 ```
 StatsWorkout reads steps and workouts from Apple Health. There is no login and no account, so a
@@ -190,7 +198,9 @@ reviewer needs nothing but the app itself:
 5. Open the Activities tab and tap a workout. The detail screen shows the route Apple Health
    recorded for that workout; routes are a separate Health permission (Workout Routes), and a
    workout without one says so and offers a button to grant that access.
-6. Settings -> Language switches the interface language. The app ships ten languages and follows
+6. Tap the share button on the dashboard (or on a workout) to see the card that goes to social apps;
+   it is rendered on device from the numbers already on screen and shared as a PNG.
+7. Settings -> Language switches the interface language. The app ships ten languages and follows
    the device by default; the choice applies after a restart, as the footer says.
 
 No health data leaves the device: there is no server component, no analytics and no third-party SDK.
@@ -218,9 +228,10 @@ Czech one.
 | 2 | `02-day.png` | `02-day.png` | Hourly bars with a value callout and the progress chart |
 | 3 | `03-progress.png` | `03-progress.png` | Running total against the previous period |
 | 4 | `04-workout-detail.png` | `04-workout-detail.png` | A workout with its route map, metrics and splits |
-| 5 | `05-activity-log.png` | `05-activity-log.png` | Workouts by day, with their names |
-| 6 | `06-activities-only.png` | — | The same month limited to workouts |
-| 7 | `07-settings.png` | — | Units, language, defaults and Health access |
+| 5 | `05-share.png` | `05-share.png` | The card that gets posted, in the share preview |
+| 6 | `06-activity-log.png` | `06-activity-log.png` | Workouts by day, with their names |
+| 7 | `07-activities-only.png` | — | The same month limited to workouts |
+| 8 | `08-settings.png` | — | Units, language, defaults and Health access |
 
 Sizes: iPhone 1206 × 2622, iPad 2064 × 2752 — App Store Connect's 6.1"/6.3" and 13" slots.
 

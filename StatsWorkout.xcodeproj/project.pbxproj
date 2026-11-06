@@ -12,6 +12,7 @@
 		1402DBA85E7952B803C93B7B /* PeriodFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C55310202C3CD895365E4D6 /* PeriodFormatter.swift */; };
 		1C0E3DE0BE403D8CE14B6F97 /* en.json in Resources */ = {isa = PBXBuildFile; fileRef = 4B5F0ECC73232D44C1EB7097 /* en.json */; };
 		294241A097CB399892BC869D /* it.json in Resources */ = {isa = PBXBuildFile; fileRef = E022263F2FF411EAEC4AC240 /* it.json */; };
+		32D1B1CA39A9C3D75B164A66 /* SharePreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E319EADCF6C86DF911AB7B96 /* SharePreviewSheet.swift */; };
 		332F680A9E5D5DEA7BF5F5A1 /* PeriodCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB5520439B3C8ED30A28404B /* PeriodCalendar.swift */; };
 		36B8E4096685DA55E384B219 /* ScreenshotRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B869C463E711007AF88838F /* ScreenshotRoute.swift */; };
 		38A3271641C788A0AB69748E /* pt.json in Resources */ = {isa = PBXBuildFile; fileRef = 1C07BD7E780680824BD37A2A /* pt.json */; };
@@ -24,7 +25,6 @@
 		47554A73516CD5F38B750150 /* ActivitySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C8F3C7CDB50164BE220677B /* ActivitySample.swift */; };
 		47879048F185B2BC81AFDE5E /* HealthCacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4A50EAC43B6026657B39D0 /* HealthCacheStore.swift */; };
 		47DC878D2351030302A6DEBD /* es.json in Resources */ = {isa = PBXBuildFile; fileRef = C78920F68D843CFA69304DB2 /* es.json */; };
-		4AB11AD4759492673757AAA0 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 977357ABDC72455D899E6AC2 /* ShareSheet.swift */; };
 		4D83B03BFACF2E22A912174B /* ActivityDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA60D407E71C514EB2A4E1D /* ActivityDetailViewModel.swift */; };
 		4DEAB522ED999871DDAC7F60 /* HealthDataProviding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED2993A3876A4C23D3A1E64 /* HealthDataProviding.swift */; };
 		52A181D9A1D017155B4B69BF /* MetricChartCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 885BC175BADE9C7E23F90ADA /* MetricChartCard.swift */; };
@@ -71,6 +71,7 @@
 		DC1419137D1EE0324922A1B8 /* ShareComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 671BCF2D30D6EE0388C6FE4C /* ShareComposer.swift */; };
 		DC18748BBEADCE14F83DBE92 /* PeriodStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CF6202FDC4E7FB5D95B735 /* PeriodStats.swift */; };
 		E1148A88356ED47BC9A0BA1D /* HealthSyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ED4B3BA0E3CE24AD09F33C6 /* HealthSyncCoordinator.swift */; };
+		E2632C29F00E0CFB77DBEB78 /* SharePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7354B4BF25D6FEF76921FF3E /* SharePresentation.swift */; };
 		E82A0B7B6EB57F7FEB72555A /* StatsAggregator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F920BC2ABC48E7083ED6DAE /* StatsAggregator.swift */; };
 		EDEEC4A69F109DCE2B845E60 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D53C1279433506B53C90C0F /* DashboardView.swift */; };
 		EF8865C3BB95C0232E071DAB /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E97FDFD2204029F973FCA6FA /* DashboardViewModel.swift */; };
@@ -127,13 +128,13 @@
 		6D53C1279433506B53C90C0F /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		7198EC96E5E389A0474CCD45 /* ja.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ja.json; sourceTree = "<group>"; };
 		73282981453780FF3C2A5B4E /* fr.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fr.json; sourceTree = "<group>"; };
+		7354B4BF25D6FEF76921FF3E /* SharePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePresentation.swift; sourceTree = "<group>"; };
 		8106FD1BF171FF5DAB2755D2 /* WorkoutMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutMapper.swift; sourceTree = "<group>"; };
 		8139CC21593C09F4DCC4C945 /* PeriodPickerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodPickerBar.swift; sourceTree = "<group>"; };
 		8747BE8A556AB5C82C4F67AC /* StatsWorkout.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StatsWorkout.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		885BC175BADE9C7E23F90ADA /* MetricChartCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricChartCard.swift; sourceTree = "<group>"; };
 		8C55310202C3CD895365E4D6 /* PeriodFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodFormatter.swift; sourceTree = "<group>"; };
 		8FF9C975C00BF80ED2A1B1DE /* PreviewSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewSupport.swift; sourceTree = "<group>"; };
-		977357ABDC72455D899E6AC2 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		97EB19BC7E551E09EFFE5636 /* HealthSamples.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSamples.swift; sourceTree = "<group>"; };
 		98CF8004C7C717029AC1DE0F /* PeriodCalendarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodCalendarTests.swift; sourceTree = "<group>"; };
 		9B11A5904924FAD4DA166DB9 /* WorkoutNaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutNaming.swift; sourceTree = "<group>"; };
@@ -153,6 +154,7 @@
 		DA59F936E3379D4C080CA1BE /* RoutePoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePoint.swift; sourceTree = "<group>"; };
 		E022263F2FF411EAEC4AC240 /* it.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = it.json; sourceTree = "<group>"; };
 		E1250EE0B7B43C8291657BEB /* WorkoutRouteMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutRouteMap.swift; sourceTree = "<group>"; };
+		E319EADCF6C86DF911AB7B96 /* SharePreviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharePreviewSheet.swift; sourceTree = "<group>"; };
 		E4187D987B41B8DF46878692 /* ActivityLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityLogView.swift; sourceTree = "<group>"; };
 		E62E0009ED36B7630B24A983 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		E97FDFD2204029F973FCA6FA /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
@@ -306,7 +308,8 @@
 				C96B7B609FE75506EEC3FE2A /* DashboardShareCard.swift */,
 				0DB627354D9589DF9F465B76 /* ShareCard.swift */,
 				671BCF2D30D6EE0388C6FE4C /* ShareComposer.swift */,
-				977357ABDC72455D899E6AC2 /* ShareSheet.swift */,
+				7354B4BF25D6FEF76921FF3E /* SharePresentation.swift */,
+				E319EADCF6C86DF911AB7B96 /* SharePreviewSheet.swift */,
 				4E492717D8DF7B5A50A833F9 /* WorkoutShareCard.swift */,
 			);
 			path = Share;
@@ -557,7 +560,8 @@
 				D2A505EAD5FE698DBC35A439 /* SettingsView.swift in Sources */,
 				AE7665249C69AB5A3FA4676C /* ShareCard.swift in Sources */,
 				DC1419137D1EE0324922A1B8 /* ShareComposer.swift in Sources */,
-				4AB11AD4759492673757AAA0 /* ShareSheet.swift in Sources */,
+				E2632C29F00E0CFB77DBEB78 /* SharePresentation.swift in Sources */,
+				32D1B1CA39A9C3D75B164A66 /* SharePreviewSheet.swift in Sources */,
 				E82A0B7B6EB57F7FEB72555A /* StatsAggregator.swift in Sources */,
 				66E49E5DBBE60BB10554D7C4 /* StatsWorkoutApp.swift in Sources */,
 				42C911133505797427435EE5 /* Theme.swift in Sources */,
@@ -655,7 +659,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -722,7 +726,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

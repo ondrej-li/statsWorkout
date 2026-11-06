@@ -18,9 +18,10 @@ Frames:
 | `02-day` | A full day with hourly bars, a value callout and the progress chart |
 | `03-progress` | Running total against the previous period |
 | `04-workout-detail` | A workout with its route map, metrics and splits |
-| `05-activity-log` | Workouts grouped by day, each with its name |
-| `06-activities-only` | The same month limited to samples recorded inside workouts (iPhone only) |
-| `07-settings` | Units, language, period defaults and Health access (iPhone only) |
+| `05-share` | The card that goes to Instagram, Facebook, Messenger or WhatsApp |
+| `06-activity-log` | Workouts grouped by day, each with its name |
+| `07-activities-only` | The same month limited to samples recorded inside workouts (iPhone only) |
+| `08-settings` | Units, language, period defaults and Health access (iPhone only) |
 
 Every frame carries a 9:41 status bar, no alpha channel and no metadata chunks — Simulator
 screenshots have an alpha channel and ImageIO stamps an `eXIf` chunk, and App Store Connect rejects
@@ -47,6 +48,7 @@ arguments handled by [ScreenshotRoute.swift](../Sources/App/ScreenshotRoute.swif
 | `-screenshotSection charts\|progress\|activities` | Scrolls to a card |
 | `-screenshotSelect peak` | Selects the highest bucket, so the callout is never empty |
 | `-screenshotWorkout 0` | Opens the nth workout's detail screen |
+| `-screenshotShare YES` | Opens the share preview once the dashboard has data |
 | `-screenshotHideDemoLabels YES` | Hides the demo chip, banner and route caption |
 
 All of these answer `nil` in a Release build, so nothing about them can reach the archive shipped to
