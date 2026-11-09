@@ -5,13 +5,28 @@ import Observation
 @MainActor
 @Observable
 final class AppSettings {
-    var distanceUnit: DistanceUnit { didSet { store(distanceUnit.rawValue, forKey: Key.distanceUnit) } }
-    var elevationUnit: ElevationUnit { didSet { store(elevationUnit.rawValue, forKey: Key.elevationUnit) } }
+    var distanceUnit: DistanceUnit {
+        didSet {
+            store(distanceUnit.rawValue, forKey: Key.distanceUnit)
+            mirrorToWidget()
+        }
+    }
+    var elevationUnit: ElevationUnit {
+        didSet {
+            store(elevationUnit.rawValue, forKey: Key.elevationUnit)
+            mirrorToWidget()
+        }
+    }
     var comparisonMode: ComparisonMode { didSet { store(comparisonMode.rawValue, forKey: Key.comparisonMode) } }
     var preferredPeriod: PeriodKind { didSet { store(preferredPeriod.rawValue, forKey: Key.preferredPeriod) } }
     var useMockData: Bool { didSet { store(useMockData, forKey: Key.useMockData) } }
     var dataScope: DataScope { didSet { store(dataScope.rawValue, forKey: Key.dataScope) } }
-    var language: AppLanguage { didSet { store(language.rawValue, forKey: Key.language) } }
+    var language: AppLanguage {
+        didSet {
+            store(language.rawValue, forKey: Key.language)
+            mirrorToWidget()
+        }
+    }
 
     private let defaults: UserDefaults
     private let persists: Bool
@@ -57,6 +72,21 @@ final class AppSettings {
 
     var unitPreferences: UnitPreferences {
         UnitPreferences(distanceUnit: distanceUnit, elevationUnit: elevationUnit)
+    }
+
+    /// The language in force right now: what the picker resolved to at launch,
+    /// which is what the catalogs use and what the widget should match.
+    var appliedLanguage: AppLanguage { L10n.shared.language }
+
+    /// Copies what the widget needs into the App Group defaults. The widget runs
+    /// in its own process and cannot see these preferences otherwise.
+    func mirrorToWidget() {
+        guard persists else { return }
+        SharedPreferences(
+            languageCode: appliedLanguage.code ?? "en",
+            distanceUnit: distanceUnit.rawValue,
+            elevationUnit: elevationUnit.rawValue
+        ).save()
     }
 
     private func store(_ value: Any, forKey key: String) {

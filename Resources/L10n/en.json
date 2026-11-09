@@ -206,5 +206,13 @@
   "unit.steps": "steps",
   "value.a11y": "%1$@: %2$@",
   "value.steps": "%1$@ steps",
-  "value.withUnit": "%1$@ %2$@"
+  "value.withUnit": "%1$@ %2$@",
+  "widget.activities.badge": "Workouts",
+  "widget.description": "Your period, your metrics. Steps, distance, elevation, exercise time and activities — for any period the app shows.",
+  "widget.empty.body": "There is no data for this period. Pick another period in the widget's settings.",
+  "widget.empty.title": "Nothing recorded yet",
+  "widget.needsApp.body": "The widget reads the app's own cache. Open the app and it will fill in.",
+  "widget.needsApp.title": "Open StatsWorkout once",
+  "widget.title": "Statistics",
+  "widget.updated": "Updated %1$@"
 }

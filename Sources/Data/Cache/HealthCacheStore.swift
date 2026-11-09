@@ -6,8 +6,8 @@ protocol HealthCacheStoring: Sendable {
     func clear() async
 }
 
-/// File-backed cache in Application Support: small, atomic and easy to inspect
-/// with a text editor while debugging.
+/// File-backed cache in the App Group container: small, atomic, easy to inspect
+/// with a text editor while debugging — and readable by the widget.
 struct FileHealthCacheStore: HealthCacheStoring {
     private let url: URL
 
@@ -16,9 +16,11 @@ struct FileHealthCacheStore: HealthCacheStoring {
     }
 
     static var defaultURL: URL {
-        let directory = URL.applicationSupportDirectory.appending(path: "StatsWorkout", directoryHint: .isDirectory)
-        return directory.appending(path: "health-cache.json")
+        AppGroup.directory("StatsWorkout").appending(path: "health-cache.json")
     }
+
+    /// Where the widget reads the same file from.
+    static var sharedURL: URL { defaultURL }
 
     func load() async -> HealthSampleCache? {
         guard let data = try? Data(contentsOf: url) else { return nil }

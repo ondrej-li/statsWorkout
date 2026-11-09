@@ -206,5 +206,13 @@
   "unit.steps": "걸음",
   "value.a11y": "%1$@: %2$@",
   "value.steps": "%1$@걸음",
-  "value.withUnit": "%1$@ %2$@"
+  "value.withUnit": "%1$@ %2$@",
+  "widget.activities.badge": "운동",
+  "widget.description": "원하는 기간과 지표를 골라 보세요. 걸음 수, 거리, 고도, 운동 시간, 활동 횟수를 앱과 같은 기간으로 보여줍니다.",
+  "widget.empty.body": "이 기간에 데이터가 없습니다. 위젯 설정에서 다른 기간을 선택하세요.",
+  "widget.empty.title": "아직 기록이 없습니다",
+  "widget.needsApp.body": "위젯은 앱의 캐시를 읽습니다. 앱을 열면 채워집니다.",
+  "widget.needsApp.title": "StatsWorkout을 한 번 열어 주세요",
+  "widget.title": "통계",
+  "widget.updated": "%1$@ 업데이트"
 }

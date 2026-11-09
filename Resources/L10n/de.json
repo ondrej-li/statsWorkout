@@ -206,5 +206,13 @@
   "unit.steps": "Schritte",
   "value.a11y": "%1$@: %2$@",
   "value.steps": "%1$@ Schritte",
-  "value.withUnit": "%1$@ %2$@"
+  "value.withUnit": "%1$@ %2$@",
+  "widget.activities.badge": "Training",
+  "widget.description": "Dein Zeitraum, deine Werte. Schritte, Distanz, Höhenmeter, Trainingszeit und Aktivitäten — für jeden Zeitraum der App.",
+  "widget.empty.body": "Für diesen Zeitraum gibt es keine Daten. Wähle in den Widget-Einstellungen einen anderen.",
+  "widget.empty.title": "Noch nichts aufgezeichnet",
+  "widget.needsApp.body": "Das Widget liest den Cache der App. Öffne sie, dann füllt es sich.",
+  "widget.needsApp.title": "StatsWorkout einmal öffnen",
+  "widget.title": "Statistiken",
+  "widget.updated": "Aktualisiert %1$@"
 }

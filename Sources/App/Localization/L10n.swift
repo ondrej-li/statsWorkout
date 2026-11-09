@@ -213,6 +213,16 @@ enum L10nKey: String, CaseIterable, Sendable {
     case settingsLanguageFooter = "settings.language.footer"
     case settingsLanguageRestart = "settings.language.restart"
 
+    // Widgets
+    case widgetTitle = "widget.title"
+    case widgetDescription = "widget.description"
+    case widgetActivitiesBadge = "widget.activities.badge"
+    case widgetUpdated = "widget.updated"
+    case widgetNeedsAppTitle = "widget.needsApp.title"
+    case widgetNeedsAppBody = "widget.needsApp.body"
+    case widgetEmptyTitle = "widget.empty.title"
+    case widgetEmptyBody = "widget.empty.body"
+
     // Sharing
     case shareButton = "share.button"
     case sharePreviewHint = "share.preview.hint"

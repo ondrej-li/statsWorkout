@@ -206,5 +206,13 @@
   "unit.steps": "kroků",
   "value.a11y": "%1$@: %2$@",
   "value.steps": "%1$@ kroků",
-  "value.withUnit": "%1$@ %2$@"
+  "value.withUnit": "%1$@ %2$@",
+  "widget.activities.badge": "Tréninky",
+  "widget.description": "Vaše období, vaše metriky. Kroky, vzdálenost, převýšení, čas cvičení a aktivity — za jakékoli období, které aplikace umí.",
+  "widget.empty.body": "Pro toto období nejsou data. Vyberte v nastavení widgetu jiné období.",
+  "widget.empty.title": "Zatím nic zaznamenáno",
+  "widget.needsApp.body": "Widget čte mezipaměť aplikace. Otevřete ji a údaje se doplní.",
+  "widget.needsApp.title": "Otevřete jednou StatsWorkout",
+  "widget.title": "Statistiky",
+  "widget.updated": "Aktualizováno %1$@"
 }
