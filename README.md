@@ -8,8 +8,9 @@ renders them with Swift Charts: zoomable bar charts, a cumulative progress compa
 press-and-drag value inspection. Every workout opens into a Health-style detail screen with its
 route, splits and statistics.
 
-> **Status:** 1.2.0. Statistics, charts, data scopes, background updates, workout detail with
-> routes, ten languages and social sharing are done. Widgets and goals are not implemented yet.
+> **Status:** 1.3.0. Statistics, charts, data scopes, background updates, workout detail with
+> routes, ten languages, social sharing and configurable widgets are done. Goals are not implemented
+> yet.
 
 <p align="center">
   <img src="docs/dashboard.png" alt="StatsWorkout dashboard showing November totals, metric tiles and a steps chart" width="320">
@@ -37,6 +38,10 @@ route, splits and statistics.
   the location.
 - **Background updates** — HealthKit background delivery plus an on-device cache of daily totals, so
   the app is current when it opens and a month or year view does not re-read years of samples.
+- **Widgets** — a Home Screen widget in every size, configured with the same filters as the app:
+  period (including a custom range), how many periods back, All data or Activities, which baseline to
+  compare against, and which metrics to show. The size decides how many fit — one on small, three on
+  medium, five on large — so nothing is crowded, and each size gets a bar chart of the period.
 - **Sharing** — one tap on the dashboard shares the period *as filtered*: the range, the All data /
   Activities scope and the metric on screen, drawn together with the chart, the comparison and all
   five totals. A workout shares its own card — route, name, date and numbers. Both render to a
@@ -200,6 +205,35 @@ The sentence itself lives in the language catalogs (`naming.title` with `%1$@` t
 `%2$@` activity noun, `%3$@` place), so each language can order it its own way instead of having
 an English pattern glued together.
 
+### Widgets
+
+The widget extension (`Sources/Widgets`, plus `Sources/Shared/WidgetUI` for the views) never asks
+HealthKit for anything. It reads the app's daily roll-ups from the App Group container and aggregates
+them with the same `StatsAggregator`, so a widget and the dashboard cannot disagree:
+
+| File | Role |
+| --- | --- |
+| `Sources/Shared/WidgetCore.swift` | `WidgetFilters` (the configuration, in app types), `WidgetDataSource`, the placeholder sample data |
+| `Sources/Shared/WidgetUI/` | the widget's body and its size rules — shared so they render in tests |
+| `Sources/Widgets/StatsWidgetIntent.swift` | `AppIntentConfiguration`: period, periods back, custom range, data scope, comparison, metrics |
+| `Sources/Widgets/StatsTimelineProvider.swift` | loads the cache, refreshes every 30 minutes |
+| `Sources/Widgets/StatsWidget.swift` | the `WidgetBundle` |
+
+Three things are deliberate:
+
+- **`WidgetFilters` rather than `WidgetConfiguration`** — the latter is WidgetKit's protocol, and a
+  type with that name shadows it inside `var body: some WidgetConfiguration`.
+- **Configuration labels come from `.strings`, not the app's catalogs.** iOS draws the settings
+  screen itself, before any of our code runs, and resolves those strings against the *device*
+  language. `tools/generate-widget-strings.py` writes `Resources/WidgetStrings/<code>.lproj` from the
+  same translations, so the two never drift. The widget's *content* still uses `L10n`, i.e. the
+  language picked in the app.
+- **The widget mirrors the app's language and units** into the shared defaults
+  (`SharedPreferences`), because an extension cannot read the app's `UserDefaults`.
+
+`StatsWidgetView` takes an optional `familyOverride`: `widgetFamily` is read-only in the
+environment, and the render tests need to draw each size.
+
 ### Sharing
 
 `Sources/Features/Share/` turns what a screen already computed into an image — no HealthKit call and
@@ -252,7 +286,9 @@ Sources/
   App/          app entry point, dependency container, settings, screenshot routes, localisation
   Domain/       models, period calendar, aggregation, route geometry, naming, formatters
   Data/         HealthKit + mock sources, workout mapping, sync coordinator, cache, places
-  Features/     Dashboard, ActivityLog (list + detail + map), Settings
+  Features/     Dashboard, ActivityLog (list + detail + map), Share, Settings
+  Shared/       App Group, shared preferences, widget filters + data + views
+  Widgets/      the widget extension: intent, timeline provider, widget bundle
   DesignSystem/ theme, cards, pills, tiles
 Tests/          Swift Testing suites
 Supporting/     generated Info.plist and entitlements
@@ -272,11 +308,12 @@ adding or deleting source files.
 make test
 ```
 
-85 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
+104 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
 both data scopes, partial-period comparison, unit formatting, the sample cache and refresh planning,
 route geometry and splits, workout naming, and the language catalogs (completeness, placeholders,
 plural forms and word order), and the share cards (pixel size, non-blank render, axis ticks, and the
-route fit). Chart cards, the map and the detail screen ship with
+route fit), and the widgets (filter resolution against the dashboard's own windows, cache loading
+for both data scopes, metric capacity per size, and a render of all three sizes). Chart cards, the map and the detail screen ship with
 `#Preview`s backed by the mock data source, so visual work does not need a device.
 
 CI runs the same build and test on every pull request (see `.github/workflows/ci.yml`).

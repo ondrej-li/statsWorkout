@@ -1,4 +1,4 @@
-# App Store listing — 1.2.0
+# App Store listing — 1.3.0
 
 Copy ready to paste into App Store Connect. Character counts are Apple's limits, measured on the
 exact strings below — run `$ python3 tools/check-listing-limits.py` to verify them.
@@ -14,7 +14,7 @@ Two localisations ship: **English (primary)** and **Czech**. The app itself spea
 | Subtitle | `Health stats for every period` | 29 / 30 |
 | Bundle ID | `com.defik74.statsWorkout` | — |
 | SKU | `statsworkout-001` | — |
-| Version | `1.2.0` | — |
+| Version | `1.3.0` | — |
 | Primary language | English (U.S.) | — |
 | Primary category | Health & Fitness | — |
 | Secondary category | — | — |
@@ -36,7 +36,7 @@ Two localisations ship: **English (primary)** and **Czech**. The app itself spea
 All-day steps, distance, elevation and exercise time for any period — then share your progress as a card made for Instagram, Facebook and WhatsApp.
 ```
 
-## Description — English (2915 / 4000)
+## Description — English (3345 / 4000)
 
 ```
 StatsWorkout turns the activity already stored in Apple Health into statistics you can actually read.
@@ -64,6 +64,9 @@ Workouts also get a name you would use yourself — "Your morning walk around Br
 SHARE YOUR PROGRESS
 One tap turns the screen into a card for Instagram, Facebook, Messenger or WhatsApp: the period you picked, the filter you are on, the chart and every total. Workouts share their own card, with the shape of the route and the numbers that came with it. Both are 1080 × 1350, the shape those apps crop to without cutting anything off.
 
+WIDGETS THAT MATCH YOUR DASHBOARD
+Add a widget in any size and set it up the way you set up the app: the period (down to a custom range), how many periods back, all data or workouts only, which baseline to compare against, and which metrics to show. The size decides how many fit — one number on the small widget, three on the medium, five on the large — so a widget never looks crowded, and each one gets a chart of the period.
+
 TEN LANGUAGES
 English, Czech, German, Spanish, French, Italian, Portuguese, Japanese, Korean and Simplified Chinese. Follow your device, or pick one in Settings. Dates, numbers and workout names follow the language you choose.
 
@@ -80,7 +83,7 @@ StatsWorkout asks Apple Health for read-only access to steps, distances, flights
 Requires iOS 26 or later. iPhone and iPad.
 ```
 
-## Description — Czech (2826 / 4000)
+## Description — Czech (3228 / 4000)
 
 ```
 StatsWorkout mění aktivitu uloženou v Apple Health na statistiky, které se dají opravdu číst.
@@ -107,6 +110,9 @@ Tréninky dostanou i jméno, které byste použili sami — „ranní procházka
 
 SDÍLEJTE SVŮJ POKROK
 Jedním klepnutím se obrazovka změní na kartu pro Instagram, Facebook, Messenger nebo WhatsApp: zvolené období, aktivní filtr, graf a všechny součty. Tréninky mají vlastní kartu s tvarem trasy a svými čísly. Obě mají 1080 × 1350, tedy tvar, který tyto aplikace ořezávají, aniž by o něco přišly.
+
+WIDGETY, KTERÉ ODPOVÍDAJÍ PŘEHLEDU
+Přidejte si widget v libovolné velikosti a nastavte ho stejně jako aplikaci: období (i vlastní rozsah), o kolik období zpět, všechna data nebo jen tréninky, s čím srovnávat a které metriky zobrazit. Velikost rozhoduje, kolik se jich vejde — jedno číslo na malém, tři na středním, pět na velkém — takže widget nikdy nepůsobí přeplácaně a každý má graf daného období.
 
 DESET JAZYKŮ
 Angličtina, čeština, němčina, španělština, francouzština, italština, portugalština, japonština, korejština a zjednodušená čínština. Aplikace může sledovat jazyk zařízení, nebo si jeden vyberete v Nastavení. Datumy, čísla i jména tréninků se řídí zvoleným jazykem.
@@ -138,6 +144,28 @@ kroky,trénink,aktivita,vzdálenost,převýšení,chůze,běh,kolo,turistika,tra
 
 Apple indexes the app name and subtitle too, so "stats", "health" and "period" are deliberately not
 repeated here.
+
+## What's new — 1.3.0
+
+English:
+
+```
+• Home Screen widgets in all three sizes, configured with the app's own filters: period, custom
+  range, all data or workouts only, comparison baseline and which metrics to show
+• The widget size decides how many metrics fit — one, three or five — and every size gets a chart
+• Workout routes are read correctly, so the map shows what Apple Health recorded
+• Ten languages and social sharing, new in 1.2
+```
+
+Czech:
+
+```
+• Widgety na plochu ve všech třech velikostech, nastavitelné stejnými filtry jako aplikace: období,
+  vlastní rozsah, všechna data nebo jen tréninky, s čím srovnávat a které metriky zobrazit
+• Velikost widgetu určuje, kolik metrik se vejde — jedna, tři nebo pět — a každá má graf
+• Trasy tréninků se načítají správně, takže mapa ukazuje to, co Apple Health zaznamenal
+• Deset jazyků a sdílení, novinka z verze 1.2
+```
 
 ## What's new — 1.2.0
 
@@ -182,7 +210,7 @@ First release.
 • Fair comparisons against the previous period or last year
 ```
 
-## Review notes (1554 / 4000)
+## Review notes (1850 / 4000)
 
 ```
 StatsWorkout reads steps and workouts from Apple Health. There is no login and no account, so a
@@ -200,7 +228,10 @@ reviewer needs nothing but the app itself:
    workout without one says so and offers a button to grant that access.
 6. Tap the share button on the dashboard (or on a workout) to see the card that goes to social apps;
    it is rendered on device from the numbers already on screen and shared as a PNG.
-7. Settings -> Language switches the interface language. The app ships ten languages and follows
+7. To see the widget: long-press the Home Screen, tap Edit (or +), choose StatsWorkout and pick a
+   size. Its settings offer the same period, scope, comparison and metric choices as the app. The
+   widget reads the app's local cache, so it shows data once the app has been opened at least once.
+8. Settings -> Language switches the interface language. The app ships ten languages and follows
    the device by default; the choice applies after a restart, as the footer says.
 
 No health data leaves the device: there is no server component, no analytics and no third-party SDK.

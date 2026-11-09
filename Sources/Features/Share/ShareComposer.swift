@@ -84,7 +84,9 @@ enum ShareComposer {
     /// read it as a file, with a readable name. Returns `nil` if writing fails,
     /// in which case the in-memory image is shared instead.
     private static func writeFile(_ image: UIImage, name: String) -> URL? {
-        guard let data = image.pngData() else { return nil }
+        // Encoding a 1080 × 1350 image can fail under memory pressure; a JPEG is
+        // an acceptable fallback and still uploads fine to every target.
+        guard let (data, pathExtension) = encode(image) else { return nil }
         let safeName = name
             .components(separatedBy: CharacterSet(charactersIn: "/\\:?%*|\"<>\n\r\t"))
             .joined(separator: "-")
@@ -92,7 +94,7 @@ enum ShareComposer {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("share", isDirectory: true)
         let url = directory
             .appendingPathComponent(safeName.isEmpty ? "StatsWorkout" : String(safeName.prefix(60)))
-            .appendingPathExtension("png")
+            .appendingPathExtension(pathExtension)
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try data.write(to: url, options: .atomic)
@@ -100,6 +102,12 @@ enum ShareComposer {
         } catch {
             return nil
         }
+    }
+
+    private static func encode(_ image: UIImage) -> (Data, String)? {
+        if let png = image.pngData(), !png.isEmpty { return (png, "png") }
+        if let jpeg = image.jpegData(compressionQuality: 0.92), !jpeg.isEmpty { return (jpeg, "jpg") }
+        return nil
     }
 
     private static func render<V: View>(_ view: V) -> UIImage? {

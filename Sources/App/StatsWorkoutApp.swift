@@ -14,7 +14,11 @@ struct StatsWorkoutApp: App {
                 preferredLanguages: Locale.preferredLanguages
             )
         )
-        _environment = State(initialValue: AppEnvironment.live())
+        let environment = AppEnvironment.live()
+        // The widget reads the shared container, so its copy of the language and
+        // units is refreshed at every launch as well as on every change.
+        environment.settings.mirrorToWidget()
+        _environment = State(initialValue: environment)
     }
 
     var body: some Scene {

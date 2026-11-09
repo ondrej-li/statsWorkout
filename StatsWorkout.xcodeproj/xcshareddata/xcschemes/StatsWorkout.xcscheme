@@ -35,6 +35,20 @@
                ReferencedContainer = "container:StatsWorkout.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2B77127719ED0B42084BA91A"
+               BuildableName = "StatsWorkoutWidgets.appex"
+               BlueprintName = "StatsWorkoutWidgets"
+               ReferencedContainer = "container:StatsWorkout.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

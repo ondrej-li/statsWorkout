@@ -4,7 +4,7 @@ import Testing
 import UIKit
 @testable import StatsWorkout
 
-@Suite("Sharing")
+@Suite("Sharing", .serialized)
 @MainActor
 struct ShareCardTests {
     /// Pixel size, which is what a social network sees; `UIImage.size` is in points.
@@ -72,7 +72,7 @@ struct ShareCardTests {
         // The file is what the share sheet hands over: a readable name and a
         // PNG a social app can read.
         let url = try #require(item.fileURL)
-        #expect(url.pathExtension == "png")
+        #expect(["png", "jpg"].contains(url.pathExtension))
         #expect(url.lastPathComponent.contains("October 2026"))
         #expect(FileManager.default.fileExists(atPath: url.path))
         let onDisk = try #require(UIImage(contentsOfFile: url.path))

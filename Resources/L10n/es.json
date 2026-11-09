@@ -206,5 +206,13 @@
   "unit.steps": "pasos",
   "value.a11y": "%1$@: %2$@",
   "value.steps": "%1$@ pasos",
-  "value.withUnit": "%1$@ %2$@"
+  "value.withUnit": "%1$@ %2$@",
+  "widget.activities.badge": "Entrenos",
+  "widget.description": "Tu periodo, tus métricas. Pasos, distancia, desnivel, tiempo de ejercicio y actividades, para cualquier periodo de la app.",
+  "widget.empty.body": "No hay datos para este periodo. Elige otro en los ajustes del widget.",
+  "widget.empty.title": "Nada registrado aún",
+  "widget.needsApp.body": "El widget lee la caché de la app. Ábrela y se rellenará.",
+  "widget.needsApp.title": "Abre StatsWorkout una vez",
+  "widget.title": "Estadísticas",
+  "widget.updated": "Actualizado %1$@"
 }
