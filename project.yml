@@ -83,7 +83,12 @@ targets:
       - path: Sources/Widgets
       - path: Sources/Shared
       - path: Sources/Domain
-      - path: Sources/Data/Cache
+      # The widget reads Apple Health itself so it stays current while the app is
+      # closed; the cache is its fallback.
+      - path: Sources/Data
+        excludes:
+          - Places/**
+          - HealthKitBackgroundDelivery.swift
       - path: Sources/App/Localization
       - path: Resources/L10n
         buildPhase: resources
@@ -103,11 +108,14 @@ targets:
         CFBundleDisplayName: StatsWorkout
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        NSHealthShareUsageDescription: "StatsWorkout shows your statistics in a widget. Reading steps and workouts there means the widget is current even when the app is closed. Your health data stays on this device."
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: Supporting/Widgets/StatsWorkoutWidgets.entitlements
       properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
         com.apple.security.application-groups:
           - group.com.defik74.statsWorkout
 

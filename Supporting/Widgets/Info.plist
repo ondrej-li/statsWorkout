@@ -25,5 +25,7 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>StatsWorkout shows your statistics in a widget. Reading steps and workouts there means the widget is current even when the app is closed. Your health data stays on this device.</string>
 </dict>
 </plist>

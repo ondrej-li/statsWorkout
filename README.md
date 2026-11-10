@@ -41,7 +41,9 @@ route, splits and statistics.
 - **Widgets** — a Home Screen widget in every size, configured with the same filters as the app:
   period (including a custom range), how many periods back, All data or Activities, which baseline to
   compare against, and which metrics to show. The size decides how many fit — one on small, three on
-  medium, five on large — so nothing is crowded, and each size gets a bar chart of the period.
+  medium, five on large — so nothing is crowded, and each size gets a bar chart with the average.
+  Every size also shows the comparison value, the average per bucket and the best bucket, and the
+  large one adds a per-metric grid with its own trend arrows.
 - **Sharing** — one tap on the dashboard shares the period *as filtered*: the range, the All data /
   Activities scope and the metric on screen, drawn together with the chart, the comparison and all
   five totals. A workout shares its own card — route, name, date and numbers. Both render to a
@@ -207,9 +209,21 @@ an English pattern glued together.
 
 ### Widgets
 
-The widget extension (`Sources/Widgets`, plus `Sources/Shared/WidgetUI` for the views) never asks
-HealthKit for anything. It reads the app's daily roll-ups from the App Group container and aggregates
-them with the same `StatsAggregator`, so a widget and the dashboard cannot disagree:
+The widget extension (`Sources/Widgets`, plus `Sources/Shared/WidgetUI` for the views) keeps itself
+current rather than decorating a snapshot:
+
+- **It reads Apple Health itself.** A widget refresh goes through the same
+  `HealthSyncCoordinator` the app uses, so the numbers are current while the user is walking or
+  working out with the app closed — and the read refreshes the shared cache on its way through.
+- **The cache is the fallback.** If Health access is missing or a query fails, the widget aggregates
+  the app's daily roll-ups from the App Group container instead. Same `StatsAggregator`, so the two
+  can never disagree.
+- **The app pushes refreshes.** Every sync — foreground or a HealthKit background wake-up — rewrites
+  the cache and calls `WidgetCenter.reloadAllTimelines()` (`WidgetBridge`), as does a change of units,
+  language or data source. That is what makes a widget move while the phone is in a pocket: iOS alone
+  would only refresh it on its own budgeted schedule.
+
+The rest:
 
 | File | Role |
 | --- | --- |

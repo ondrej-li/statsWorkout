@@ -64,43 +64,96 @@ struct WidgetStats: Sendable {
 struct WidgetDataSource: Sendable {
     let calendar: Calendar
     let store: any HealthCacheStoring
+    /// When set, the widget reads Apple Health directly — the only way it can be
+    /// current while the user is walking or working out with the app closed.
+    /// `nil` reads the app's cache instead.
+    let liveSource: (any HealthDataProviding)?
+    let sourceKey: String
 
-    init(calendar: Calendar = .autoupdatingCurrent, store: any HealthCacheStoring = FileHealthCacheStore()) {
+    init(
+        calendar: Calendar = .autoupdatingCurrent,
+        store: any HealthCacheStoring = FileHealthCacheStore(),
+        liveSource: (any HealthDataProviding)? = nil,
+        sourceKey: String = "healthkit"
+    ) {
         self.calendar = calendar
         self.store = store
+        self.liveSource = liveSource
+        self.sourceKey = sourceKey
     }
 
     func load(configuration: WidgetFilters, now: Date = Date()) async -> WidgetStats {
         let configuration = configuration.validates()
         let periodCalendar = PeriodCalendar(calendar: calendar)
         let range = Self.range(for: configuration, periodCalendar: periodCalendar, now: now)
-
-        guard let cache = await store.load() else {
-            return WidgetStats(range: range, content: .needsApp, syncedAt: nil)
-        }
-
         let comparisonRange = periodCalendar.comparisonRange(for: range, mode: configuration.comparison)
         let window = DateInterval(
             start: min(range.start, comparisonRange.start),
             end: max(range.end, comparisonRange.end)
         )
-        let samples = cache.samples(in: window)
 
+        // A day or 24-hour widget needs hourly resolution, which the daily cache
+        // cannot provide; everything else is fine either way.
+        let granularity: StepGranularity = periodCalendar.granularity(for: range) == .hour ? .hour : .day
+
+        if let liveSource {
+            if let samples = try? await load(
+                window: window,
+                granularity: granularity,
+                source: liveSource,
+                now: now
+            ), !samples.isEmpty {
+                return WidgetStats(
+                    range: range,
+                    content: .ready(aggregate(samples, range: range, configuration: configuration, periodCalendar: periodCalendar, now: now)),
+                    syncedAt: now
+                )
+            }
+        }
+
+        guard let cache = await store.load() else {
+            return WidgetStats(range: range, content: .needsApp, syncedAt: nil)
+        }
+
+        let samples = cache.samples(in: window)
         guard !samples.isEmpty else {
             return WidgetStats(range: range, content: .empty, syncedAt: cache.lastSyncedAt)
         }
 
-        let aggregated = StatsAggregator(periodCalendar: periodCalendar).stats(
-            for: range,
-            samples: samples,
-            comparison: configuration.comparison,
-            now: now
-        )
         return WidgetStats(
             range: range,
-            content: .ready(aggregated.stats(for: configuration.scope)),
+            content: .ready(aggregate(samples, range: range, configuration: configuration, periodCalendar: periodCalendar, now: now)),
             syncedAt: cache.lastSyncedAt
         )
+    }
+
+    /// Reads Health through the same coordinator the app uses, so the widget's
+    /// query also refreshes the shared cache the app reads next time.
+    private func load(
+        window: DateInterval,
+        granularity: StepGranularity,
+        source: any HealthDataProviding,
+        now: Date
+    ) async throws -> HealthSamples {
+        try await HealthSyncCoordinator(store: store, calendar: calendar).loadSamples(
+            for: window,
+            granularity: granularity,
+            source: source,
+            sourceKey: sourceKey,
+            now: now
+        )
+    }
+
+    private func aggregate(
+        _ samples: HealthSamples,
+        range: PeriodRange,
+        configuration: WidgetFilters,
+        periodCalendar: PeriodCalendar,
+        now: Date
+    ) -> PeriodStats {
+        StatsAggregator(periodCalendar: periodCalendar)
+            .stats(for: range, samples: samples, comparison: configuration.comparison, now: now)
+            .stats(for: configuration.scope)
     }
 
     /// The window on screen: the current period, or `periodsAgo` back from it.
@@ -139,43 +192,48 @@ enum WidgetPlaceholder {
         let buckets = periodCalendar.buckets(for: range)
         let comparisonRange = periodCalendar.comparisonRange(for: range, mode: filters.comparison)
         let previousBuckets = periodCalendar.buckets(for: comparisonRange)
-        let bucketCount = Double(max(buckets.count, 1))
+        let hourly = periodCalendar.granularity(for: range) == .hour
 
-        func spread(_ factor: Double) -> MetricTotals {
-            MetricTotals(
-                steps: 9_140 / bucketCount * factor,
-                distanceMeters: 7_240 / bucketCount * factor,
-                elevationGainMeters: 96 / bucketCount * factor,
-                exerciseDuration: 3_480 / bucketCount * factor,
+        // Plausible per-bucket numbers, so the gallery shows a readable chart and
+        // a realistic average rather than totals divided by a bucket count.
+        func totals(forBucket index: Int) -> MetricTotals {
+            let wave = 0.55 + 0.45 * abs(sin(Double(index) * 0.8))
+            return MetricTotals(
+                steps: (hourly ? 420 : 8_400) * wave,
+                distanceMeters: (hourly ? 380 : 7_600) * wave,
+                elevationGainMeters: (hourly ? 2 : 22) * wave,
+                exerciseDuration: (hourly ? 150 : 3_000) * wave,
                 activityCount: 0
             )
         }
+
+        let bucketStats = buckets.enumerated().map { index, bucket in
+            BucketStats(bucket: bucket, totals: totals(forBucket: index))
+        }
+        let summed = bucketStats.reduce(MetricTotals()) { $0 + $1.totals }
+        let periodTotals = MetricTotals(
+            steps: summed.steps,
+            distanceMeters: summed.distanceMeters,
+            elevationGainMeters: summed.elevationGainMeters,
+            exerciseDuration: summed.exerciseDuration,
+            activityCount: max(1, buckets.count / 9)
+        )
 
         return PeriodStats(
             range: range,
             comparisonRange: comparisonRange,
             comparisonMode: filters.comparison,
             granularity: periodCalendar.granularity(for: range),
-            buckets: buckets.enumerated().map { index, bucket in
-                // A gentle wave, so the chart has a readable shape.
-                let wave = 0.55 + 0.45 * abs(sin(Double(index) * 0.8))
-                return BucketStats(bucket: bucket, totals: spread(wave))
-            },
-            totals: MetricTotals(
-                steps: 9_140,
-                distanceMeters: 7_240,
-                elevationGainMeters: 96,
-                exerciseDuration: 3_480,
-                activityCount: 3
-            ),
+            buckets: bucketStats,
+            totals: periodTotals,
             comparisonTotals: MetricTotals(
-                steps: 7_490,
-                distanceMeters: 5_930,
-                elevationGainMeters: 78,
-                exerciseDuration: 2_850,
-                activityCount: 2
+                steps: periodTotals.steps * 0.82,
+                distanceMeters: periodTotals.distanceMeters * 0.82,
+                elevationGainMeters: periodTotals.elevationGainMeters * 0.82,
+                exerciseDuration: periodTotals.exerciseDuration * 0.82,
+                activityCount: max(0, periodTotals.activityCount - 1)
             ),
-            previousSeries: previousBuckets.map { _ in spread(0.4) },
+            previousSeries: previousBuckets.enumerated().map { index, _ in totals(forBucket: index) },
             elapsedBucketCount: max(buckets.count, 1),
             isCurrentPeriod: true,
             elapsedFraction: 1

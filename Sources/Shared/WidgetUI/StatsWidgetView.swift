@@ -89,6 +89,13 @@ struct StatsWidgetView: View {
                     .background(Color.primary.opacity(0.10), in: Capsule())
                     .lineLimit(1)
             }
+            // Freshly synced data gets a dot; an old one says how old.
+            if let syncedAt = stats.syncedAt {
+                let age = -syncedAt.timeIntervalSinceNow
+                Circle()
+                    .fill(age < 20 * 60 ? Color.green : Color.secondary.opacity(0.5))
+                    .frame(width: 5, height: 5)
+            }
         }
         .foregroundStyle(.secondary)
     }
@@ -99,23 +106,30 @@ struct StatsWidgetView: View {
         let metric = configuration.primaryMetric
         return VStack(alignment: .leading, spacing: 3) {
             hero(metric, stats: stats, size: 32)
-            HStack(spacing: 5) {
+
+            HStack(spacing: 4) {
                 deltaPill(metric, stats: stats)
-                // The unit already names the metric, except for exercise time,
-                // which has none.
-                if formatter.heroUnit(for: metric) == nil {
-                    Text(metric.title)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
+                comparisonValue(metric, stats: stats, size: 10)
             }
+
+            Text(metric.title)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
             Spacer(minLength: 0)
+
             WidgetSparkline(
                 values: stats.buckets.map { $0.totals.value(for: metric) },
-                height: WidgetLayout.chartHeight(for: family)
+                height: WidgetLayout.chartHeight(for: family),
+                showsAverage: true
             )
+
+            Text(averageCaption(metric, stats: stats))
+                .font(.system(size: 9, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -126,42 +140,68 @@ struct StatsWidgetView: View {
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 2) {
                     hero(metric, stats: stats, size: 26)
-                    deltaPill(metric, stats: stats)
+                    HStack(spacing: 4) {
+                        deltaPill(metric, stats: stats)
+                        comparisonValue(metric, stats: stats, size: 10)
+                    }
                 }
                 Spacer(minLength: 0)
-                metricGrid(stats, excluding: metric, size: 15)
-                    .frame(maxWidth: 150)
+                metricGrid(stats, excluding: metric, size: 14)
+                    .frame(maxWidth: 170)
             }
 
-            if WidgetLayout.showsChart(for: family) {
-                WidgetSparkline(
-                    values: stats.buckets.map { $0.totals.value(for: metric) },
-                    height: WidgetLayout.chartHeight(for: family)
-                )
+            WidgetSparkline(
+                values: stats.buckets.map { $0.totals.value(for: metric) },
+                height: WidgetLayout.chartHeight(for: family),
+                showsAverage: true
+            )
+
+            HStack(spacing: 6) {
+                Text(averageCaption(metric, stats: stats))
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
+                bestCaption(metric, stats: stats)
+                    .layoutPriority(0)
             }
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
         }
     }
 
     private func large(_ stats: PeriodStats) -> some View {
         let metric = configuration.primaryMetric
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 9) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 hero(metric, stats: stats, size: 34)
                 deltaPill(metric, stats: stats)
+                comparisonValue(metric, stats: stats, size: 10)
                 Spacer(minLength: 0)
             }
 
             WidgetSparkline(
                 values: stats.buckets.map { $0.totals.value(for: metric) },
-                height: WidgetLayout.chartHeight(for: family)
+                height: WidgetLayout.chartHeight(for: family),
+                showsAverage: true
             )
+
+            HStack(spacing: 6) {
+                Text(averageCaption(metric, stats: stats))
+                Spacer(minLength: 0)
+                bestCaption(metric, stats: stats)
+            }
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
 
             Divider().opacity(0.4)
 
             LazyVGrid(
                 columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
                 alignment: .leading,
-                spacing: 10
+                spacing: 9
             ) {
                 ForEach(rows(for: stats), id: \.title) { row in
                     VStack(alignment: .leading, spacing: 1) {
@@ -175,11 +215,18 @@ struct StatsWidgetView: View {
                                 .minimumScaleFactor(0.7)
                         }
                         .foregroundStyle(.secondary)
-                        Text(row.value)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(row.value)
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .monospacedDigit()
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                            if let delta = row.delta {
+                                Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                    .font(.system(size: 7, weight: .heavy))
+                                    .foregroundStyle(delta >= 0 ? Color.green : Color.orange)
+                            }
+                        }
                     }
                 }
             }
@@ -226,6 +273,36 @@ struct StatsWidgetView: View {
         }
     }
 
+    /// The same number for the comparison window, e.g. "vs 7,490".
+    @ViewBuilder
+    private func comparisonValue(_ metric: Metric, stats: PeriodStats, size: CGFloat) -> some View {
+        let previous = stats.comparisonValue(of: metric)
+        if previous > 0 {
+            Text(L10n.t(.widgetComparisonValue, formatter.tileString(previous, for: metric)))
+                .font(.system(size: size, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+    }
+
+    private func averageCaption(_ metric: Metric, stats: PeriodStats) -> String {
+        L10n.t(
+            .widgetAverage,
+            formatter.tileString(stats.average(of: metric), for: metric),
+            periodFormatter.bucketNoun(for: stats)
+        )
+    }
+
+    @ViewBuilder
+    private func bestCaption(_ metric: Metric, stats: PeriodStats) -> some View {
+        if let best = stats.buckets.max(by: { $0.totals.value(for: metric) < $1.totals.value(for: metric) }),
+           best.totals.value(for: metric) > 0 {
+            Text(L10n.t(.widgetBest, periodFormatter.shortBucketTitle(for: best.bucket, in: stats)))
+                .lineLimit(1)
+        }
+    }
+
     private func metricGrid(_ stats: PeriodStats, excluding metric: Metric, size: CGFloat) -> some View {
         let items = metrics.filter { $0 != metric }
         return VStack(alignment: .trailing, spacing: 5) {
@@ -248,6 +325,7 @@ struct StatsWidgetView: View {
         let title: String
         let value: String
         let systemImage: String
+        let delta: Double?
     }
 
     private func rows(for stats: PeriodStats) -> [Row] {
@@ -257,7 +335,8 @@ struct StatsWidgetView: View {
                 Row(
                     title: metric.title,
                     value: formatter.tileString(stats.value(of: metric), for: metric),
-                    systemImage: metric.systemImage
+                    systemImage: metric.systemImage,
+                    delta: stats.delta(of: metric)
                 )
             }
     }
@@ -299,14 +378,22 @@ struct StatsWidgetView: View {
         let preferences = SharedPreferences.load()
         return MetricFormatter(units: preferences.unitPreferences, locale: preferences.locale)
     }
+
+    private var periodFormatter: PeriodFormatter {
+        PeriodFormatter(locale: SharedPreferences.load().locale)
+    }
 }
 
 /// Bars for the period, drawn small: enough to read a trend at a glance.
 struct WidgetSparkline: View {
     let values: [Double]
     let height: CGFloat
+    var showsAverage: Bool = false
 
     private var maximum: Double { max(values.max() ?? 0, 0.0001) }
+    private var average: Double {
+        values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -314,15 +401,29 @@ struct WidgetSparkline: View {
             let spacing: CGFloat = count > 20 ? 1.5 : 3
             let barWidth = max(1, (proxy.size.width - spacing * CGFloat(count - 1)) / CGFloat(count))
 
-            HStack(alignment: .bottom, spacing: spacing) {
-                ForEach(Array(values.enumerated()), id: \.offset) { _, value in
-                    let fraction = max(0, min(1, value / maximum))
-                    RoundedRectangle(cornerRadius: min(2, barWidth / 2.5), style: .continuous)
-                        .fill(Color.accentColor.opacity(value > 0 ? 0.85 : 0.15))
-                        .frame(width: barWidth, height: max(fraction * proxy.size.height, value > 0 ? 2 : 1))
+            ZStack(alignment: .bottomLeading) {
+                HStack(alignment: .bottom, spacing: spacing) {
+                    ForEach(Array(values.enumerated()), id: \.offset) { _, value in
+                        let fraction = max(0, min(1, value / maximum))
+                        RoundedRectangle(cornerRadius: min(2, barWidth / 2.5), style: .continuous)
+                            .fill(Color.accentColor.opacity(value > 0 ? 0.85 : 0.15))
+                            .frame(width: barWidth, height: max(fraction * proxy.size.height, value > 0 ? 2 : 1))
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+
+                if showsAverage, average > 0 {
+                    let y = proxy.size.height - (average / maximum) * proxy.size.height
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: y))
+                        path.addLine(to: CGPoint(x: proxy.size.width, y: y))
+                    }
+                    .stroke(
+                        Color.primary.opacity(0.28),
+                        style: StrokeStyle(lineWidth: 1, dash: [3, 3])
+                    )
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .frame(height: height)
     }
