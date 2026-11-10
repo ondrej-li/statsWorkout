@@ -93,10 +93,35 @@ final class AppEnvironment {
         let delivery = HealthKitBackgroundDelivery { [weak self] _ in
             Task { @MainActor in
                 self?.healthUpdates += 1
+                await self?.refreshInBackground()
             }
         }
         backgroundDelivery = delivery
         delivery.start()
+    }
+
+    /// HealthKit woke the app because steps or a workout changed. Re-reads a short
+    /// window so the shared cache the widget reads is current, then redraws the
+    /// widgets — this is what keeps a widget live while the phone is in a pocket.
+    func refreshInBackground() async {
+        guard !settings.useMockData else {
+            WidgetBridge.reload()
+            return
+        }
+        let now = now()
+        let calendar = self.calendar
+        let start = calendar.date(byAdding: .hour, value: -6, to: now) ?? now
+        let window = DateInterval(start: calendar.startOfDay(for: start), end: now)
+
+        _ = try? await sync.loadSamples(
+            for: window,
+            // Hourly samples back the day and 24-hour widgets.
+            granularity: .hour,
+            source: healthKit,
+            sourceKey: dataSourceKey,
+            now: now
+        )
+        WidgetBridge.reload()
     }
 
     // MARK: - Workout naming

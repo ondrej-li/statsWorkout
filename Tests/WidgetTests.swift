@@ -250,6 +250,49 @@ struct WidgetDataSourceTests {
         }
     }
 
+    @Test("A widget reads Apple Health live when it can, not just the cache")
+    func liveSource() async {
+        let now = TestSupport.date(calendar, 2026, 11, 9, 12)
+        let store = InMemoryHealthCacheStore()
+        // No cache at all: only the live read can supply anything.
+        let live = RecordingHealthDataSource(stepsPerDay: 9_000, calendar: calendar)
+
+        let result = await WidgetDataSource(calendar: calendar, store: store, liveSource: live)
+            .load(configuration: WidgetFilters(period: .week), now: now)
+
+        let totals = try? #require(result.periodStats?.totals)
+        #expect((totals?.steps ?? 0) > 0)
+        #expect(await !live.dayWindows().isEmpty)
+    }
+
+    @Test("A day or 24-hour widget asks Health for hourly samples")
+    func hourlyGranularity() async {
+        let now = TestSupport.date(calendar, 2026, 11, 9, 12)
+        let store = InMemoryHealthCacheStore()
+        let live = RecordingHealthDataSource(calendar: calendar)
+
+        _ = await WidgetDataSource(calendar: calendar, store: store, liveSource: live)
+            .load(configuration: WidgetFilters(period: .day), now: now)
+
+        // The activities query always reports day granularity; the quantity
+        // queries are the ones that must be hourly for a day widget.
+        #expect(await live.hourWindows().count >= 3)
+    }
+
+    @Test("With no Health access the widget falls back to the app's cache")
+    func cacheFallback() async {
+        let now = TestSupport.date(calendar, 2026, 11, 9, 12)
+        let store = InMemoryHealthCacheStore()
+        await store.save(cache(now: now))
+
+        // A source that cannot answer: the cache is what is left.
+        let result = await WidgetDataSource(calendar: calendar, store: store, liveSource: FailingHealthDataSource())
+            .load(configuration: WidgetFilters(period: .month), now: now)
+
+        let totals = try? #require(result.periodStats?.totals)
+        #expect((totals?.steps ?? 0) > 0)
+    }
+
     @Test("The placeholder has a readable shape and no real data")
     func placeholder() throws {
         let stats = WidgetPlaceholder.stats(
@@ -265,4 +308,32 @@ struct WidgetDataSourceTests {
         #expect(Set(values.map { Int($0.rounded()) }).count > 3)
         #expect(stats.delta(of: .steps) != nil)
     }
+}
+
+/// A source that is present but refuses every query, standing in for a user who
+/// declined Health access.
+struct FailingHealthDataSource: HealthDataProviding {
+    var isAvailable: Bool { true }
+
+    func authorizationRequestStatus() async throws -> HealthAuthorizationStatus { .unnecessary }
+    func requestAuthorization() async throws {}
+    func activities(in interval: DateInterval) async throws -> [ActivitySample] { throw HealthDataError.queryFailed("denied") }
+    func stepSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [StepSample] {
+        throw HealthDataError.queryFailed("denied")
+    }
+    func distanceSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        throw HealthDataError.queryFailed("denied")
+    }
+    func elevationSamples(in interval: DateInterval, granularity: StepGranularity) async throws -> [QuantitySample] {
+        throw HealthDataError.queryFailed("denied")
+    }
+    func workoutQuantitySamples(
+        in interval: DateInterval,
+        kind: ContinuousQuantity,
+        within windows: [DateInterval],
+        granularity: StepGranularity
+    ) async throws -> [QuantitySample] {
+        throw HealthDataError.queryFailed("denied")
+    }
+    func workoutDetail(for activity: ActivitySample) async throws -> WorkoutDetail { WorkoutDetail() }
 }

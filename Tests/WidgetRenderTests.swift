@@ -65,6 +65,9 @@ struct WidgetRenderTests {
             rangeTitle: "November 2026",
             familyOverride: family
         )
+        // Widget content gets these margins from the system; without them the
+        // render would touch the edges and misrepresent the layout.
+        .padding(11)
         .frame(width: size(for: family).width, height: size(for: family).height)
         .environment(\.colorScheme, .dark)
         .environment(\.dynamicTypeSize, .large)

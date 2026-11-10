@@ -152,7 +152,10 @@ English:
 ```
 • Home Screen widgets in all three sizes, configured with the app's own filters: period, custom
   range, all data or workouts only, comparison baseline and which metrics to show
-• The widget size decides how many metrics fit — one, three or five — and every size gets a chart
+• The widget size decides how many metrics fit — one, three or five — and every size gets a chart,
+  the comparison value, the average and the best period
+• Widgets read Apple Health directly, so they keep up while you are walking or working out, even with
+  the app closed
 • Workout routes are read correctly, so the map shows what Apple Health recorded
 • Ten languages and social sharing, new in 1.2
 ```
@@ -162,7 +165,10 @@ Czech:
 ```
 • Widgety na plochu ve všech třech velikostech, nastavitelné stejnými filtry jako aplikace: období,
   vlastní rozsah, všechna data nebo jen tréninky, s čím srovnávat a které metriky zobrazit
-• Velikost widgetu určuje, kolik metrik se vejde — jedna, tři nebo pět — a každá má graf
+• Velikost widgetu určuje, kolik metrik se vejde — jedna, tři nebo pět — a každá má graf, srovnání,
+  průměr a nejlepší období
+• Widgety čtou přímo z Apple Health, takže se aktualizují i při chůzi nebo tréninku a se zavřenou
+  aplikací
 • Trasy tréninků se načítají správně, takže mapa ukazuje to, co Apple Health zaznamenal
 • Deset jazyků a sdílení, novinka z verze 1.2
 ```
@@ -210,7 +216,7 @@ First release.
 • Fair comparisons against the previous period or last year
 ```
 
-## Review notes (1850 / 4000)
+## Review notes (1931 / 4000)
 
 ```
 StatsWorkout reads steps and workouts from Apple Health. There is no login and no account, so a
@@ -230,7 +236,8 @@ reviewer needs nothing but the app itself:
    it is rendered on device from the numbers already on screen and shared as a PNG.
 7. To see the widget: long-press the Home Screen, tap Edit (or +), choose StatsWorkout and pick a
    size. Its settings offer the same period, scope, comparison and metric choices as the app. The
-   widget reads the app's local cache, so it shows data once the app has been opened at least once.
+   widget reads Apple Health directly (the same permission the app already has) and falls back to the
+   app's local cache, so it shows numbers once Health access has been granted.
 8. Settings -> Language switches the interface language. The app ships ten languages and follows
    the device by default; the choice applies after a restart, as the footer says.
 

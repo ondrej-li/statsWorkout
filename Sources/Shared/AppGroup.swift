@@ -42,6 +42,9 @@ struct SharedPreferences: Codable, Equatable, Sendable {
     /// Raw values, so the widget can decode them without the app's types.
     var distanceUnit: String = DistanceUnit.kilometers.rawValue
     var elevationUnit: String = ElevationUnit.meters.rawValue
+    /// Mirrored so the widget shows demo numbers while the app is in demo mode,
+    /// and real ones as soon as that is switched off.
+    var useMockData: Bool = false
 
     static let defaultsKey = "shared.preferences"
 

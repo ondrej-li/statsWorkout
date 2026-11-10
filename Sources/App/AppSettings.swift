@@ -19,7 +19,12 @@ final class AppSettings {
     }
     var comparisonMode: ComparisonMode { didSet { store(comparisonMode.rawValue, forKey: Key.comparisonMode) } }
     var preferredPeriod: PeriodKind { didSet { store(preferredPeriod.rawValue, forKey: Key.preferredPeriod) } }
-    var useMockData: Bool { didSet { store(useMockData, forKey: Key.useMockData) } }
+    var useMockData: Bool {
+        didSet {
+            store(useMockData, forKey: Key.useMockData)
+            mirrorToWidget()
+        }
+    }
     var dataScope: DataScope { didSet { store(dataScope.rawValue, forKey: Key.dataScope) } }
     var language: AppLanguage {
         didSet {
@@ -85,8 +90,12 @@ final class AppSettings {
         SharedPreferences(
             languageCode: appliedLanguage.code ?? "en",
             distanceUnit: distanceUnit.rawValue,
-            elevationUnit: elevationUnit.rawValue
+            elevationUnit: elevationUnit.rawValue,
+            useMockData: useMockData
         ).save()
+        // Units, language or data source changed: the widget should not wait for
+        // its next scheduled refresh to show it.
+        WidgetBridge.reload()
     }
 
     private func store(_ value: Any, forKey key: String) {

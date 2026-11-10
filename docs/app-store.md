@@ -50,8 +50,8 @@ descriptions, keywords, What's New and review notes.
 
 | Capability | Used by |
 | --- | --- |
-| HealthKit | the app reads steps, workouts and workout routes |
-| App Groups (`group.com.defik74.statsWorkout`) | the app writes its daily cache here; the widget reads it |
+| HealthKit | the app reads steps, workouts and workout routes; the widget reads the same data so it stays current with the app closed |
+| App Groups (`group.com.defik74.statsWorkout`) | the app writes its daily cache here; the widget reads it as a fallback, and both share language, units and demo-mode settings |
 
 Both are in the entitlements files under `Supporting/`, so automatic signing registers them with the
 App ID on the first archive. A new team member or a manual profile needs the App Group added to the

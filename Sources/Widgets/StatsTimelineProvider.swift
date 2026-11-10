@@ -2,14 +2,17 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// Loads the widget's numbers from the app's shared cache and schedules the next
-/// refresh.
+/// Loads the widget's numbers and schedules the next refresh.
 ///
-/// No push, no HealthKit: the app writes the shared cache whenever it syncs, and
-/// the widget re-reads it every half hour. That keeps the timeline cheap and the
-/// numbers within a few minutes of the dashboard.
+/// The widget reads Apple Health itself, so it is current while the user is
+/// walking or working out with the app closed; the app's shared cache is the
+/// fallback when Health access is missing, and the source of everything older
+/// than the current period. iOS grants a widget a limited number of refreshes,
+/// so the interval is deliberately modest — `WidgetCenter` reloads are triggered
+/// from the app whenever it syncs in the foreground or in the background.
 struct StatsTimelineProvider: AppIntentTimelineProvider {
-    static let refreshInterval: TimeInterval = 30 * 60
+    /// The shortest interval iOS honours in practice without a reload signal.
+    static let refreshInterval: TimeInterval = 15 * 60
 
     func placeholder(in context: Context) -> StatsEntry {
         StatsEntry.placeholder(configuration: Self.previewConfiguration, formatter: MetricFormatter())
@@ -34,13 +37,22 @@ struct StatsTimelineProvider: AppIntentTimelineProvider {
 
     func entry(for intent: StatsWidgetIntent) async -> StatsEntry {
         let configuration = intent.configuration
-        let stats = await WidgetDataSource().load(configuration: configuration)
+        let preferences = preferences()
+        let stats = await dataSource(for: preferences).load(configuration: configuration)
         return StatsEntry(
             date: Date(),
             configuration: configuration,
             stats: stats,
-            rangeTitle: PeriodFormatter(locale: preferences().locale).rangeTitle(for: stats.range)
+            rangeTitle: PeriodFormatter(locale: preferences.locale).rangeTitle(for: stats.range)
         )
+    }
+
+    /// Demo mode is mirrored from the app so the widget shows the same thing the
+    /// dashboard does; otherwise the widget reads Health directly.
+    private func dataSource(for preferences: SharedPreferences) -> WidgetDataSource {
+        preferences.useMockData
+            ? WidgetDataSource(liveSource: MockHealthDataSource(), sourceKey: "mock")
+            : WidgetDataSource(liveSource: HealthKitDataSource(), sourceKey: "healthkit")
     }
 
     func formatter() -> MetricFormatter {

@@ -198,6 +198,9 @@ final class DashboardViewModel {
                 .sorted { $0.start > $1.start }
             phase = .loaded
             ScreenshotRoute.markReady("stats")
+            // The load above refreshed the shared cache; let the widgets pick it
+            // up instead of waiting for their own schedule.
+            WidgetBridge.reload()
         } catch is CancellationError {
             return
         } catch let error as HealthDataError where error.isAuthorizationNotDetermined {
