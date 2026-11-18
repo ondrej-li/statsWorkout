@@ -364,19 +364,17 @@ verifies it against Apple's character limits.
 
 ## Publishing
 
-CI does it: `.github/workflows/testflight.yml` archives, exports and uploads to TestFlight on a
-macOS runner. Push a `v*` tag, or run the workflow by hand from *Actions → TestFlight*. Build numbers
-come from the workflow run number; bump `MARKETING_VERSION` in `project.yml` before a new version.
-
-It needs six repository secrets — [`docs/TESTFLIGHT.md`](docs/TESTFLIGHT.md) lists them and how to
-make them, and an app record for `com.defik74.statsWorkout` must exist in App Store Connect.
-
-On a machine where Xcode still has the team's Apple ID signed in, the old route is still there:
+Publishing is manual, from a machine where Xcode has the team's Apple ID signed in. CI builds and
+tests; it does not upload anything, and no Apple credential is stored in this repository.
 
 ```bash
 make testflight                    # build number defaults to a timestamp
 make testflight BUILD_NUMBER=42    # or pass an explicit build number
 ```
+
+An app record for `com.defik74.statsWorkout` must exist in App Store Connect, and
+`MARKETING_VERSION` in `project.yml` is what you bump for a new version. See
+[docs/TESTFLIGHT.md](docs/TESTFLIGHT.md).
 
 ## App Store pages
 

@@ -57,17 +57,16 @@ that builds on Linux. Do not try to compile it on the VPS.
 
 ## Shipping
 
-`.github/workflows/testflight.yml` archives in Release, exports an `.ipa` and
-uploads it to TestFlight. Triggers: a `v*` tag (always uploads) or a manual run
-(uploads unless you untick the box). Build number = workflow run number;
+**Publishing is manual; CI does not upload anything** and no Apple credential is
+stored in this repository. On a machine with Xcode signed into the team's Apple ID:
+
+```sh
+make testflight                    # build number defaults to a timestamp
+make testflight BUILD_NUMBER=42    # or pass an explicit build number
+```
+
 `MARKETING_VERSION` lives in `project.yml` — bump it before a new version.
-
-It needs six repository secrets; [`docs/TESTFLIGHT.md`](docs/TESTFLIGHT.md) lists
-them and how to produce them. Until they exist the run fails at the first step and
-names the missing secret.
-
-`make testflight` still exists for a machine with a signed-in Xcode, but that is a
-fallback, not the path.
+[`docs/TESTFLIGHT.md`](docs/TESTFLIGHT.md) has the prerequisites.
 
 The support/privacy site is published with `make deploy-site` (rsync of
 `Website/` to the VPS).

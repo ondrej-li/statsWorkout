@@ -1,70 +1,29 @@
-# TestFlight
+# Publishing
 
-[`.github/workflows/testflight.yml`](../.github/workflows/testflight.yml)
-archives the app, exports an `.ipa` and uploads it to TestFlight. It runs on a
-GitHub `macos-26` runner, so no machine of yours needs Xcode, a certificate or an
-Apple ID signed in.
+**CI does not publish.** There is no workflow that uploads to App Store Connect,
+and no Apple credential is stored in this repository. Publishing is a manual step
+from a machine with Xcode and the developer account signed in; the commit-time
+workflow (`ci.yml`) only builds and tests.
 
-## How it is triggered
+Why: an upload needs a distribution identity, and an identity is a private key
+Apple hands out once per certificate. Every arrangement that puts one in CI
+either stores a long-lived secret (which has to be exported out of a keychain) or
+re-creates the certificate per run (which mails the account holder and
+invalidates profiles built on it). Neither is worth it for a handful of releases
+a year.
 
-| Trigger | What happens |
-| --- | --- |
-| Push a `v*` tag | archive, export and upload |
-| *Actions → TestFlight → Run workflow* | the same, unless you untick **upload** — unticked it archives and exports without sending anything, which is the cheap way to check signing |
+## How to ship
 
-`CFBundleVersion` becomes the workflow run number, so TestFlight never sees the
-same build number twice. `MARKETING_VERSION` is in `project.yml`; bump it there
-for a new version.
-
-## The six repository secrets
-
-| Secret | Contents |
-| --- | --- |
-| `APPLE_TEAM_ID` | `B592D69P29` |
-| `APP_CONNECT_KEY_ID` | the API key's 10-character ID |
-| `APP_CONNECT_ISSUER_ID` | the issuer UUID shown above the key list |
-| `APP_CONNECT_KEY_P8` | the whole `AuthKey_<id>.p8`, base64 encoded |
-| `BUILD_CERTIFICATE_P12` | your *Apple Distribution* certificate, base64 encoded |
-| `BUILD_CERTIFICATE_PASSWORD` | the password you chose when exporting the `.p12` |
-
-The key comes from *App Store Connect → Users and Access → Integrations → App
-Store Connect API*, role **App Manager**. Apple allows one download of the `.p8`.
-
-The certificate comes from Keychain Access: *My Certificates → Apple
-Distribution: … → right-click → Export*. The workflow imports it into a temporary
-keychain and throws it away with the runner.
+__SHIP__
 
 ```sh
-base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy     # paste into the secret
-base64 -i distribution.p12      | pbcopy
+make testflight                      # build number defaults to a timestamp
+make testflight BUILD_NUMBER=42      # or pass an explicit one
 ```
 
-Until all six exist the workflow fails at *Check the signing secrets exist* and
-names the missing ones. That is deliberate — a deploy that cannot deploy should
-be red, not quietly skipped.
+`Scripts/publish-testflight.sh` archives in Release, signs with automatic
+provisioning for team `B592D69P29` and uploads with the Apple ID signed into
+Xcode (*Xcode → Settings → Accounts*). An app record for
+`com.defik74.statsWorkout` must exist in App Store Connect.
 
-## What it needs on Apple's side
-
-- An app record for `com.defik74.statsWorkout` in App Store Connect.
-- The App Group and HealthKit entitlements already present in
-  `Supporting/*.entitlements` must be enabled for that bundle ID; the API key
-  creates or refreshes the provisioning profile but cannot enable a capability.
-
-## Export options
-
-`Supporting/ExportOptions.plist` is committed: `method: app-store-connect`,
-`destination: export`, automatic signing for team `B592D69P29`, symbol upload on,
-and `manageAppVersionAndBuildNumber` off so Xcode does not renumber builds behind
-the workflow's back.
-
-## After the upload
-
-Processing takes a few minutes before testers see the build. The workflow keeps
-`StatsWorkout-ipa` as an artifact for 14 days, so a failed upload can be retried
-from the artifact instead of being rebuilt.
-
-## The old local route
-
-`make testflight` (`Scripts/publish-testflight.sh`) still works on a machine
-where Xcode has the team's Apple ID signed in. It is kept for emergencies; the
-workflow is the normal path and the only one the CI badge reflects.
+Bump `MARKETING_VERSION` in `project.yml` before a new version.
