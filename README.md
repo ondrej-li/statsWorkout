@@ -322,6 +322,10 @@ adding or deleting source files.
 make test
 ```
 
+A local `make test` needs a full Xcode. CI runs the same suite on a macOS runner
+(`.github/workflows/ci.yml`), so a push is checked whether or not the machine you
+edited on can build.
+
 104 tests cover period boundaries (including DST and leap years), bucket generation, aggregation for
 both data scopes, partial-period comparison, unit formatting, the sample cache and refresh planning,
 route geometry and splits, workout naming, and the language catalogs (completeness, placeholders,
