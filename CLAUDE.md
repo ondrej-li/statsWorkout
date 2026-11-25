@@ -82,3 +82,43 @@ The support/privacy site is published with `make deploy-site` (rsync of
 - Localisation: every user-visible string goes through the catalog; the language
   tests fail on a missing placeholder or plural form.
 - Do not commit `screenshots/` regenerations unless the artwork actually changed.
+
+## Before this site goes live
+
+This repository is served publicly at https://stats-workout.ondralinek.cz. A change that adds or alters a
+page, a form, a script, a header or a vhost passes the launch gate before it
+ships:
+
+```sh
+web-launch-check https://stats-workout.ondralinek.cz
+```
+
+- `FAIL` blocks the publish; `WARN` is a decision to state in the reply, not
+  something to leave unmentioned.
+- The `web-launch-checklist` skill has the 25 items the checker cannot judge:
+  privacy and terms content, colour contrast, real-device speed, spam
+  protection, analytics and error monitoring, one clear call to action, and the
+  signup/login/reset flows.
+- Run it again after publishing: it checks the live vhost, headers and
+  certificate, not the working tree.
+- A preview vhost passes the same gate before DNS moves.
+
+## Deploying this site
+
+https://stats-workout.ondralinek.cz is published by the **deploy** account from this repository's
+`main` branch — the `site-deploy` timer, every five minutes. Merge is
+deploy: there is no publish command, and `sudo vps-site publish` refuses this
+web root (one writer per root, and it is not this account).
+
+Verify after merging, and give it up to ten minutes:
+
+```sh
+site-status --site stats-workout
+curl -fsS https://stats-workout.ondralinek.cz/deployed.json           # {"commit": "...", "deployed_at": "..."}
+git -C ~/repos/statsWorkout rev-parse origin/main
+```
+
+The three commits must match. If it has not moved after two timer cycles, read
+`journalctl -u site-deploy -n 50`, report the commit that should be live and the
+one that is, and do not rsync into `/var/www` or edit a live file to compensate.
+The `static-site-deploy` skill has the full procedure.
